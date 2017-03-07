@@ -68,39 +68,38 @@ from storage.
 These apply to 2.4GHz WiFi, 5GHz WiFi, Bluetooth, and Bluetooth LE.
 * mac1 - Local MAC address
 * mac2 - Remote MAC address
-* rss - Received signal strength in dB (or was it dBm)
+* rss - Received signal strength in dBm
 * freq - Frequency in MHz (roughly 2400 or 5000)
+* width - Channel width in MHz, either 20, 40, 80, or 160.
 * dist - Actual distance in meters
+
+Note that NN training sets that include freq and width will likely over-fit
+unless a substantially large and diverse set of samples are collected.
 
 ##### TOF sample fields
 These apply to Bluetooth measurements at both the HCI/snoop level and Java level.
 * mac1 - Local MAC address
 * mac2 - Remote MAC address
 * tof - Time of flight in nanoseconds
+* dist - Actual distance in meters
 
 #### Interpreted results (NN fields)
-<!-- (Commented out because it results in a 1-in 1-out NN setup.) -->
-<!-- 1. Defining a ranging sample from raw sample(s).  -->
-  <!-- * minDur - The minimum duration to collect raw samples. -->
-  <!-- * maxDur - The maximum duration to collect raw samples. -->
-  <!-- * minCount - The minimum number of raw samples to collect. -->
-  <!-- * maxCount - The maximum number of raw samples to collect. -->
-  <!-- * method - How to combine the raw samples into a ranging sample. -->
-  <!-- Must be "median", "mean", "drop-n-median", or "drop-n-mean" where _n_ is -->
-  <!-- the number of raw samples to drop from both the high and low end. -->
-
-  <!-- A new ranging sample is created when both minimums are reached or either  -->
-  <!-- maximum is reached. That is `(minDur && minCount) || maxDur || maxCount`. -->
-  <!-- Duration starts at the first raw sample collected. A timer is set to stop -->
-  <!-- collection after maxDur has elapsed. -->
-  
-* inputs - The number of raw samples in a range sample, which will also be the 
-  number of input neurons in the NN.
+* samples - The number of raw samples which make a range sample.
+* method - How to combine raw samples into a ranging sample.
+  Must be "median" or "mean".
+* drop - The number of raw samples to drop from both the high and low end.
+  If samples is 3 and drop is 1, 5 raw samples will be taken to make 1 ranging sample.
+* inputs - How many inputs the NN uses. Either 1 or 3, depending on whether 
+  frequency and channel width should be included.
 * hidden - The number of hidden neurons to use in the NN.
 * weights - The array of weights to use for calculating range using the NN.
   The NN is MLP so the number of weights should be equal to 
-  `hidden * (inputs + outputs + 1) + outputs`. The number of outputs is always
-  1, so if using 5 inputs and 3 hidden, there should be 22 weights.
+  `hidden * (inputs + outputs + 1) + outputs`. The number of outputs 
+  is always 1, so if using 3 inputs and 2 hidden, there should be 11 weights.
+ 
+Note that the inputs and outputs of the NN must be scaled. RSS ranges 
+from -120 dBm to 0 dBm, and would be plugged into the NN as -1 and 1 respectively.
+Outputs can range from 0 meters to 100 meters, scaled to 0 and 1 respectively.
 
 
 #### User preferences
@@ -118,7 +117,7 @@ Raw samples
 * tof_bt_hci.csv
 * tof_bt_java.csv
 
-Neural network settings (inputs, hidden, weights...)
+Neural network settings (samples, method, drop, inputs, hidden, weights...)
 * nn_rss_wifi4g.csv
 * nn_rss_wifi5g.csv
 * nn_rss_bt.csv
