@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Localization</string>
+    <string name="app_persisting">%1$s is running in the background</string>
+    <string name="action_settings">Settings</string>
+    <string name="send">send</string>
+    <string name="activity_sampleviewer">Sample Viewer</string>
+</resources>

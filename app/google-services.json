@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "10794791185",
+    "firebase_url": "https://localization-7535f.firebaseio.com",
+    "project_id": "localization-7535f",
+    "storage_bucket": "localization-7535f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:10794791185:android:d7a8dfb92da3fa60",
+        "android_client_info": {
+          "package_name": "com.jifalops.localization"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "10794791185-hgl3v4nq41p3f0s08ibs0tj39t36dl0h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAb4IMkUPGcjmAC9xkGghybQ2D8RR8HVf4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
