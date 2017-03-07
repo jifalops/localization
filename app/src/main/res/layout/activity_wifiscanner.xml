@@ -1,0 +1,14 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/scrollView"
+    android:fillViewport="true"
+    tools:context=".wifi.WifiScannerDemoActivity">
+    <TextView
+        android:id="@+id/text"
+        android:textAppearance="?android:textAppearanceSmall"
+        android:gravity="bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</ScrollView>

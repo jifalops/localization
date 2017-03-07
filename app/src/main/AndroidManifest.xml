@@ -57,6 +57,17 @@
         <activity
             android:name=".TofSamplingActivity"
             android:label="TOF Sampling"/>
+
+        <activity
+            android:name=".bluetooth.BtBeaconDemoActivity"
+            android:label="Bluetooth Beaconing"/>
+        <activity
+            android:name=".bluetooth.BtleBeaconDemoActivity"
+            android:label="Bluetooth LE Beaconing"/>
+
+        <activity
+            android:name=".wifi.WifiScannerDemoActivity"
+            android:label="WiFi Scanner"/>
     </application>
 
 </manifest>

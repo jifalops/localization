@@ -1,5 +1,6 @@
 package com.jifalops.localization;
 
+import android.app.Activity;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -15,6 +16,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -34,6 +36,7 @@ public class ServiceThreadApplication extends Application {
     private boolean isBound;
     private LocalServiceConnection conn;
     private boolean isPersistent;
+    private Handler handler;
 
     private final ServiceConnection connection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -46,6 +49,11 @@ public class ServiceThreadApplication extends Application {
         }
     };
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        handler = new Handler();
+    }
 
     public void bindLocalService(Context ctx, LocalServiceConnection conn) {
         if (!isBound) {
@@ -68,9 +76,15 @@ public class ServiceThreadApplication extends Application {
         return isPersistent;
     }
 
-    public void setPersistent(boolean persist) {
+    /**
+     * Set whether the service should continue to run in the background.
+     * The target activity should have either android:launchMode="singleInstance" or
+     * android:launchMode="singleTask" set to avoid multiple instances.
+     */
+    public void setPersistent(boolean persist, @Nullable Class<? extends Activity> notificationTarget) {
         isPersistent = persist;
         Intent i = new Intent(this, LocalService.class);
+        i.putExtra("notificationTarget", new Intent(this, notificationTarget));
         if (persist) {
             startService(i);
         } else {
@@ -78,9 +92,26 @@ public class ServiceThreadApplication extends Application {
         }
     }
 
+    /**
+     * Convenience for sending app-wide broadcasts
+     */
+    public void broadcast(String intentAction) {
+        LocalBroadcastManager.getInstance(this).sendBroadcast(
+                new Intent(intentAction));
+    }
+
     @Nullable
     public LocalService getService() {
         return service;
+    }
+
+    /** Post to UI thread. {@link Handler#post(Runnable)} */
+    public boolean post(Runnable r) {
+        return handler.post(r);
+    }
+    /** Post to UI thread. {@link Handler#postDelayed(Runnable, long)} */
+    public boolean postDelayed(Runnable r, long delayMillis) {
+        return handler.postDelayed(r, delayMillis);
     }
 
     /**
@@ -140,11 +171,11 @@ public class ServiceThreadApplication extends Application {
         }
 
 
-        /** {@link Handler#post(Runnable)} */
+        /** Post to service thread. {@link Handler#post(Runnable)} */
         public boolean post(Runnable r) {
             return mServiceHandler.post(r);
         }
-        /** {@link Handler#postDelayed(Runnable, long)} */
+        /** Post to service thread. {@link Handler#postDelayed(Runnable, long)} */
         public boolean postDelayed(Runnable r, long delayMillis) {
             return mServiceHandler.postDelayed(r, delayMillis);
         }

@@ -91,7 +91,8 @@ These apply to Bluetooth measurements at both the HCI/snoop level and Java level
   If samples is 3 and drop is 1, 5 raw samples will be taken to make 1 ranging sample.
 * inputs - How many inputs the NN uses. Either 1 or 3, depending on whether 
   frequency and channel width should be included.
-* hidden - The number of hidden neurons to use in the NN.
+* hidden - The number of hidden neurons that were used in the NN.
+* maxRange - Upper bound for ranging estimates. Should be 100 for WiFi or 10 for BT.
 * weights - The array of weights to use for calculating range using the NN.
   The NN is MLP so the number of weights should be equal to 
   `hidden * (inputs + outputs + 1) + outputs`. The number of outputs 
@@ -99,7 +100,8 @@ These apply to Bluetooth measurements at both the HCI/snoop level and Java level
  
 Note that the inputs and outputs of the NN must be scaled. RSS ranges 
 from -120 dBm to 0 dBm, and would be plugged into the NN as -1 and 1 respectively.
-Outputs can range from 0 meters to 100 meters, scaled to 0 and 1 respectively.
+Outputs for WiFi can range from 0 meters to 100 meters, scaled to 0 and 1 
+respectively. For Bluetooth it is from 0 to 10 meters.
 
 
 #### User preferences
@@ -117,7 +119,7 @@ Raw samples
 * tof_bt_hci.csv
 * tof_bt_java.csv
 
-Neural network settings (samples, method, drop, inputs, hidden, weights...)
+Neural network settings (samples, method, drop, inputs, hidden, maxRange, weights...)
 * nn_rss_wifi4g.csv
 * nn_rss_wifi5g.csv
 * nn_rss_bt.csv
