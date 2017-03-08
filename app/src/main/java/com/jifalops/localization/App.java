@@ -22,7 +22,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.jifalops.localization.bluetooth.BtHelper;
-import com.jifalops.localization.datatypes.NnSettings;
+import com.jifalops.localization.datatypes.RangingParams;
 import com.jifalops.localization.util.FileBackedArrayList;
 import com.jifalops.localization.wifi.WifiHelper;
 
@@ -83,12 +83,12 @@ public class App extends ServiceThreadApplication {
     public FileBackedArrayList nnTofBtHciList;
     public FileBackedArrayList nnTofBtJavaList;
 
-    public NnSettings rssWifi4gSettings;
-    public NnSettings rssWifi5gSettings;
-    public NnSettings rssBtSettings;
-    public NnSettings rssBtleSettings;
-    public NnSettings tofBtSettings;
-    public NnSettings tofBtleSettings;
+    public RangingParams rssWifi4gRangingParams;
+    public RangingParams rssWifi5gRangingParams;
+    public RangingParams rssBtRangingParams;
+    public RangingParams rssBtleRangingParams;
+    public RangingParams tofBtHciRangingParams;
+    public RangingParams tofBtJavaRangingParams;
 
     public String wifiMac, btMac;
     public FirebaseUser firebaseUser;
@@ -208,37 +208,37 @@ public class App extends ServiceThreadApplication {
         nnRssWifi4gList = new FileBackedArrayList(new File(dir, FILE_NN_RSS_WIFI4G), new Runnable() {
             @Override
             public void run() {
-                rssWifi4gSettings = new NnSettings(nnRssWifi4gList.get(0).split(","));
+                rssWifi4gRangingParams = new RangingParams(nnRssWifi4gList.get(0).split(","));
             }
         });
         nnRssWifi5gList = new FileBackedArrayList(new File(dir, FILE_NN_RSS_WIFI5G), new Runnable() {
             @Override
             public void run() {
-                rssWifi5gSettings = new NnSettings(nnRssWifi5gList.get(0).split(","));
+                rssWifi5gRangingParams = new RangingParams(nnRssWifi5gList.get(0).split(","));
             }
         });
         nnRssBtList = new FileBackedArrayList(new File(dir, FILE_NN_RSS_BT), new Runnable() {
             @Override
             public void run() {
-                rssBtSettings = new NnSettings(nnRssBtList.get(0).split(","));
+                rssBtRangingParams = new RangingParams(nnRssBtList.get(0).split(","));
             }
         });
         nnRssBtleList = new FileBackedArrayList(new File(dir, FILE_NN_RSS_BTLE), new Runnable() {
             @Override
             public void run() {
-                rssBtleSettings = new NnSettings(nnRssBtleList.get(0).split(","));
+                rssBtleRangingParams = new RangingParams(nnRssBtleList.get(0).split(","));
             }
         });
         nnTofBtHciList = new FileBackedArrayList(new File(dir, FILE_NN_TOF_BT_HCI), new Runnable() {
             @Override
             public void run() {
-                tofBtSettings = new NnSettings(nnTofBtHciList.get(0).split(","));
+                tofBtHciRangingParams = new RangingParams(nnTofBtHciList.get(0).split(","));
             }
         });
         nnTofBtJavaList = new FileBackedArrayList(new File(dir, FILE_NN_TOF_BT_JAVA), new Runnable() {
             @Override
             public void run() {
-                tofBtleSettings = new NnSettings(nnTofBtJavaList.get(0).split(","));
+                tofBtJavaRangingParams = new RangingParams(nnTofBtJavaList.get(0).split(","));
             }
         });
     }

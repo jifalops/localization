@@ -1,6 +1,7 @@
 package com.jifalops.localization.datatypes;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.jifalops.localization.util.Stats;
 
@@ -10,15 +11,16 @@ import java.util.Arrays;
 /**
  * samples, method, drop, inputs, hidden, maxRange, weights...
  */
-public class NnSettings {
+public class RangingParams {
     public static final String METHOD_MEDIAN = "median";
     public static final String METHOD_MEAN   = "mean";
     public final String method;
     public final int samples, drop, inputs, hidden, maxRange;
     public final double[] weights;
-    public final int rawSamples;
 
-    public NnSettings(int samples, String method, int drop, int inputs, int hidden, int maxRange, double[] weights) {
+    public final Sampler sampler;
+
+    public RangingParams(int samples, String method, int drop, int inputs, int hidden, int maxRange, double[] weights) {
         this.samples = samples;
         this.method = method;
         this.drop = drop;
@@ -26,10 +28,11 @@ public class NnSettings {
         this.hidden = hidden;
         this.maxRange = maxRange;
         this.weights = weights;
-        rawSamples = samples + drop * 2;
+
+        sampler = new Sampler();
     }
 
-    public NnSettings(String[] csv) {
+    public RangingParams(String[] csv) {
         samples = Integer.valueOf(csv[0]);
         method = csv[1];
         drop = Integer.valueOf(csv[2]);
@@ -37,13 +40,13 @@ public class NnSettings {
         hidden = Integer.valueOf(csv[4]);
         maxRange = Integer.valueOf(csv[5]);
 
-        rawSamples = samples + drop * 2;
-
         String[] tmp = Arrays.copyOfRange(csv, 6, csv.length);
         weights = new double[tmp.length];
         for (int i = 0; i < tmp.length; ++i) {
             weights[i] = Double.valueOf(tmp[i]);
         }
+
+        sampler = new Sampler();
     }
 
     @Override
@@ -57,7 +60,10 @@ public class NnSettings {
 
 
     public float estimateRange(double[] inputs) {
-        return (float) unscaleOutput(calcOutput(scaleInputs(inputs)));
+        float range = (float) unscaleOutput(calcOutput(scaleInputs(inputs)));
+        if (range == 0) Log.d("RangingParams", "Range is 0m");
+        // In RssSamplingHelper, a range of 0 is used to mean no range estimate available.
+        return range == 0 ? 0.01f : range;
     }
 
     private double[] scaleInputs(double[] unscaled) {
@@ -125,43 +131,44 @@ public class NnSettings {
         int[] getInputs();
     }
 
+
     public class Sampler {
-        private ArrayList<Sample> rawSampleList;
+        private final ArrayList<Sample> rawSampleList = new ArrayList<>(samples);
+        private Sampler() {}
 
         /**
          * @param sample A raw sample.
          * @return A ranging estimate if this sample fulfills the NN settings requirement, or -x
          * where x is how many more raw samples are needed to make a ranging sample.
          */
-        public float add(Sample sample) {
-            if (rawSampleList == null) rawSampleList = new ArrayList<>();
-            if (rawSampleList.add(sample) && rawSampleList.size() == rawSamples) {
+        public synchronized float add(Sample sample) {
+            if (rawSampleList.add(sample) && rawSampleList.size() == samples) {
                 double[] inputSamples; // Mean or median of rssi, freq, width, or tof.
                 double[] rangingInputs = new double[inputs];
                 switch (method) {
                     case METHOD_MEDIAN:
                         for (int j = 0; j < inputs; ++j) {
-                            inputSamples = new double[rawSamples];
-                            for (int i = 0; i < rawSamples; ++i) {
+                            inputSamples = new double[samples];
+                            for (int i = 0; i < samples; ++i) {
                                 inputSamples[i] = rawSampleList.get(i).getInputs()[j];
                             }
-                            rangingInputs[j] = Stats.median(inputSamples);
+                            rangingInputs[j] = Stats.median(inputSamples, drop);
                         }
                         break;
                     case METHOD_MEAN:
                         for (int j = 0; j < inputs; ++j) {
-                            inputSamples = new double[rawSamples];
-                            for (int i = 0; i < rawSamples; ++i) {
+                            inputSamples = new double[samples];
+                            for (int i = 0; i < samples; ++i) {
                                 inputSamples[i] = rawSampleList.get(i).getInputs()[j];
                             }
-                            rangingInputs[j] = Stats.mean(inputSamples);
+                            rangingInputs[j] = Stats.mean(inputSamples, drop);
                         }
                         break;
                 }
-                rawSampleList = null;
+                rawSampleList.clear();
                 return estimateRange(rangingInputs);
             }
-            return -1 * (rawSamples - rawSampleList.size());
+            return -1 * (samples - rawSampleList.size());
         }
     }
 }

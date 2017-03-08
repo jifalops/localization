@@ -7,8 +7,7 @@ An app for collecting data and using interpreted results to do ranging and local
     * Signal strength using WiFi, Bluetooth, and Bluetooth low energy.
     * Time of flight using Bluetooth.
 2. Submit raw samples to remote database.
-3. Receive interpreted results from the database which explain to the app how to estimate range.
-  * Neural network weights and metrics - The number of inputs, hidden neurons, and the weights.
+3. Receive interpreted results (ranging parameters), from the database. See below.
 4. Use the interpreted results to perform ranging on new ranging samples.
 5. Perform localization using ranging results.
 
@@ -83,25 +82,32 @@ These apply to Bluetooth measurements at both the HCI/snoop level and Java level
 * tof - Time of flight in nanoseconds
 * dist - Actual distance in meters
 
-#### Interpreted results (NN fields)
-* samples - The number of raw samples which make a range sample.
+#### Interpreted results (RangingParams)
+* samples - The number of raw samples to collect.
+* drop - The number of samples to drop from both the high and low end
+  before applying `method`.
 * method - How to combine raw samples into a ranging sample.
   Must be "median" or "mean".
-* drop - The number of raw samples to drop from both the high and low end.
-  If samples is 3 and drop is 1, 5 raw samples will be taken to make 1 ranging sample.
-* inputs - How many inputs the NN uses. Either 1 or 3, depending on whether 
+* inputs - How many inputs the NN uses. Either 1, 2, or 3, depending on whether 
   frequency and channel width should be included.
+  TOF always has 1 input.
 * hidden - The number of hidden neurons that were used in the NN.
-* maxRange - Upper bound for ranging estimates. Should be 100 for WiFi or 10 for BT.
-* weights - The array of weights to use for calculating range using the NN.
+* maxRange - Upper bound for ranging estimates. Should be 100 for WiFi or 10 for BT,
+  but you can set other values.
+* weights - The array of weights resulting from NN training/testing.
   The NN is MLP so the number of weights should be equal to 
   `hidden * (inputs + outputs + 1) + outputs`. The number of outputs 
   is always 1, so if using 3 inputs and 2 hidden, there should be 11 weights.
  
-Note that the inputs and outputs of the NN must be scaled. RSS ranges 
-from -120 dBm to 0 dBm, and would be plugged into the NN as -1 and 1 respectively.
-Outputs for WiFi can range from 0 meters to 100 meters, scaled to 0 and 1 
-respectively. For Bluetooth it is from 0 to 10 meters.
+  Note that the inputs and outputs of the NN must be scaled. RSS ranges 
+  from -120 dBm to 0 dBm, and would be plugged into the NN as -1 and 1 respectively.
+  All weights must be between -1 and 1, inclusive.
+
+###### Example
+5 samples are collected from a single device, 1 is dropped from the high and low end, then the median
+is calculated from the remaining 3 samples. The median is plugged into the NN
+testing function, which uses inputs, hidden, maxRange, and weights to calculate
+the estimated range of that device.
 
 
 #### User preferences

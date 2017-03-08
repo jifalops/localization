@@ -23,7 +23,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.jifalops.localization.datatypes.Rssi;
+import com.jifalops.localization.datatypes.RangingParams;
 import com.jifalops.localization.util.SimpleLog;
 
 import java.util.ArrayList;
@@ -209,12 +209,12 @@ public class RssSamplingActivity extends AbsActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_BT_ENABLE) {
             if (resultCode == Activity.RESULT_CANCELED) {
-                Toast.makeText(this, "Activity cannot work unless Bluetooth is enabled.",
-                        Toast.LENGTH_LONG).show();
+//                Toast.makeText(this, "Bluetooth ",
+//                        Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == REQUEST_BT_DISCOVERABLE) {
             if (resultCode == Activity.RESULT_CANCELED) {
-                Toast.makeText(this, "Activity cannot work unless device is discoverable.",
+                Toast.makeText(this, "Other Bluetooth devices will not see this devices.",
                         Toast.LENGTH_LONG).show();
             }
         }
@@ -396,7 +396,8 @@ public class RssSamplingActivity extends AbsActivity {
         }
 
         @Override
-        public void onRecordAdded(String signal, RssSamplingHelper.Device device, Rssi r) {
+        public void onRecordAdded(String signal, RssSamplingHelper.Device device,
+                                  RangingParams.Sample r, float range) {
             updateCountView(signal);
         }
 

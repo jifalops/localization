@@ -35,6 +35,14 @@ public class Stats {
     public static double mean(double[] array) {
         return sum(array) / array.length;
     }
+    public static double mean(double[] array, int drop) {
+        if (drop > 0) {
+            double[] sorted = array.clone();
+            java.util.Arrays.sort(sorted);
+            array = java.util.Arrays.copyOfRange(sorted, drop, sorted.length - drop);
+        }
+        return mean(array);
+    }
     public static double[] rowMeans(double[][] array) {
         int len = array.length;
         double[] means = new double[len];
@@ -105,8 +113,14 @@ public class Stats {
     }
 
     public static double median(double[] array) {
+        return median(array, 0);
+    }
+    public static double median(double[] array, int drop) {
         double[] sorted = array.clone();
         java.util.Arrays.sort(sorted);
+        if (drop > 0) {
+            sorted = java.util.Arrays.copyOfRange(sorted, drop, sorted.length - drop);
+        }
         int len = sorted.length;
         int mid = len / 2; // Upper-mid index if length is even.
         double median = sorted[mid];
