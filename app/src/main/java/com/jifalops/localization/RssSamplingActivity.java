@@ -36,10 +36,10 @@ public class RssSamplingActivity extends AbsActivity {
     static final String SAMPLER = RssSamplingActivity.class.getName() + ".sampler";
 
     TextView eventLogView, deviceLogView,
-            btRssiCountView, btWindowCountView,
-            btleRssiCountView, btleWindowCountView,
-            wifiRssiCountView, wifiWindowCountView,
-            wifi5gRssiCountView, wifi5gWindowCountView,
+            btRssiCountView,
+            btleRssiCountView,
+            wifiRssiCountView,
+            wifi5gRssiCountView,
             deviceIdView;
     EditText distanceView;
     Switch collectSwitch;
@@ -56,17 +56,13 @@ public class RssSamplingActivity extends AbsActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_samplecollection);
+        setContentView(R.layout.activity_rsssampling);
         eventLogView = (TextView) findViewById(R.id.eventLog);
         deviceLogView = (TextView) findViewById(R.id.deviceLog);
         btRssiCountView = (TextView) findViewById(R.id.btRssiCount);
         btleRssiCountView = (TextView) findViewById(R.id.btleRssiCount);
         wifiRssiCountView = (TextView) findViewById(R.id.wifiRssiCount);
         wifi5gRssiCountView = (TextView) findViewById(R.id.wifi5gRssiCount);
-        btWindowCountView = (TextView) findViewById(R.id.btWindowCount);
-        btleWindowCountView = (TextView) findViewById(R.id.btleWindowCount);
-        wifiWindowCountView = (TextView) findViewById(R.id.wifiWindowCount);
-        wifi5gWindowCountView = (TextView) findViewById(R.id.wifi5gWindowCount);
         collectSwitch = (Switch) findViewById(R.id.collectSwitch);
         btCheckBox = (CheckBox) findViewById(R.id.btCheckBox);
         btleCheckBox = (CheckBox) findViewById(R.id.btleCheckBox);
@@ -104,7 +100,7 @@ public class RssSamplingActivity extends AbsActivity {
                                 id = Integer.valueOf(s);
                                 RssSamplingHelper.Device d = rssSamplingHelper.getDevice(id - 1);
                                 if (d != null) {
-//                                    d.isDistanceKnown = true;
+                                    d.isDistanceKnown = true;
                                     deviceIds.add(d.id);
                                 }
                             }

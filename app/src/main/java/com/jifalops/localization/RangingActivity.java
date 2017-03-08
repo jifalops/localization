@@ -14,6 +14,6 @@ public class RangingActivity extends AbsLinearLayoutActivity {
         addToLayout(
             "Time of Flight Ranging",
             "Test Bluetooth TOF estimates",
-            SampleCollectionActivity.class);
+            TofRangingActivity.class);
     }
 }

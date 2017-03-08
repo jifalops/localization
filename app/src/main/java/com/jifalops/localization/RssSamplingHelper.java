@@ -225,19 +225,26 @@ public class RssSamplingHelper {
                         rssi + " dBm (" + freq + " MHz) at " +
                         distance + "m (" + signal + ").");
 //                String time = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US).format(new Date());
-                Rssi record = new Rssi(App.DEVICE_ID, device.mac, rssi, freq,
-                        0, distance);
+                Rssi record = null;
                 switch (signal) {
                     case App.SIGNAL_BT:
+                         record = new Rssi(App.getInstance().btMac, device.mac, rssi, freq,
+                            0, distance);
                         App.getInstance().rssBtList.add(record.toString());
                         break;
                     case App.SIGNAL_BTLE:
+                        record = new Rssi(App.getInstance().btMac, device.mac, rssi, freq,
+                                0, distance);
                         App.getInstance().rssBtleList.add(record.toString());
                         break;
                     case App.SIGNAL_WIFI:
+                        record = new Rssi(App.getInstance().wifiMac, device.mac, rssi, freq,
+                                0, distance);
                         App.getInstance().rssWifi4gList.add(record.toString());
                         break;
                     case App.SIGNAL_WIFI5G:
+                        record = new Rssi(App.getInstance().wifiMac, device.mac, rssi, freq,
+                                0, distance);
                         App.getInstance().rssWifi5gList.add(record.toString());
                         break;
                 }

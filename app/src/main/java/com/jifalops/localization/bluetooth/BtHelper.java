@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 
 /**
@@ -51,6 +52,10 @@ public class BtHelper {
 
     @Nullable
     public String getMacAddress() {
+        // Marshmallow+
+        String macAddress = Settings.Secure.getString(ctx.getContentResolver(), "bluetooth_address");
+        if (macAddress != null) return macAddress;
+        // Older method (returns 02:00:00:00:00:00 on Marshmallow+)
         BluetoothAdapter adapter = getAdapter();
         return adapter != null ? adapter.getAddress() : null;
     }

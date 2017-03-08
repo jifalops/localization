@@ -11,8 +11,11 @@ import android.widget.Toast;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -81,6 +84,27 @@ public final class WifiHelper {
 
     @Nullable
     public String getMacAddress() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes != null) {
+                    StringBuilder res1 = new StringBuilder();
+                    for (byte b : macBytes) {
+                        res1.append(Integer.toHexString(b & 0xFF) + ":");
+                    }
+
+                    if (res1.length() > 0) {
+                        res1.deleteCharAt(res1.length() - 1);
+                    }
+                    return res1.toString();
+                }
+            }
+        } catch (Exception ex) {
+            //handle exception
+        }
         WifiInfo info = wifiManager.getConnectionInfo();
         return info == null ? null : info.getMacAddress();
     }

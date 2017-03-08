@@ -1,12 +1,21 @@
 package com.jifalops.localization;
 
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
+import android.text.TextUtils;
+import android.util.Log;
 
+import com.jifalops.localization.bluetooth.BtHelper;
 import com.jifalops.localization.datatypes.NnSettings;
 import com.jifalops.localization.util.FileBackedArrayList;
+import com.jifalops.localization.wifi.WifiHelper;
 
 import java.io.File;
 
@@ -41,8 +50,6 @@ public class App extends ServiceThreadApplication {
     public static final String FILE_NN_TOF_BT_HCI  = "nn_tof_bt_hci.csv";
     public static final String FILE_NN_TOF_BT_JAVA = "nn_tof_bt_java.csv";
 
-    public static final String DEVICE_ID = Settings.Secure.ANDROID_ID;
-
     private static App instance;
     public static App getInstance() {
         return instance;
@@ -72,6 +79,8 @@ public class App extends ServiceThreadApplication {
     public NnSettings tofBtSettings;
     public NnSettings tofBtleSettings;
 
+    public String wifiMac, btMac;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -85,6 +94,51 @@ public class App extends ServiceThreadApplication {
             }
             @Override public void onServiceDisconnected(ComponentName className) {}
         });
+
+        initWifiMac();
+        initBtMac();
+    }
+
+    private void initWifiMac() {
+        final WifiHelper wifi = WifiHelper.getInstance(this);
+        wifiMac = wifi.getMacAddress();
+        if (TextUtils.isEmpty(wifiMac)) {
+            registerReceiver(new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    int state = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, -1);
+                    if (state == WifiManager.WIFI_STATE_ENABLED) {
+                        wifiMac = wifi.getMacAddress();
+                        if (TextUtils.isEmpty(wifiMac)) {
+                            Log.e("App", "WiFi is enabled but no MAC address available");
+                        } else {
+                            unregisterReceiver(this);
+                        }
+                    }
+                }
+            }, new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
+        }
+    }
+
+    private void initBtMac() {
+        final BtHelper bt = BtHelper.getInstance(this);
+        btMac = bt.getMacAddress();
+        if (TextUtils.isEmpty(btMac)) {
+            registerReceiver(new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
+                    if (state == BluetoothAdapter.STATE_ON) {
+                        btMac = bt.getMacAddress();
+                        if (TextUtils.isEmpty(btMac)) {
+                            Log.e("App", "BT is enabled but no MAC address available");
+                        } else {
+                            unregisterReceiver(this);
+                        }
+                    }
+                }
+            }, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+        }
     }
 
     private void loadDataFiles() {

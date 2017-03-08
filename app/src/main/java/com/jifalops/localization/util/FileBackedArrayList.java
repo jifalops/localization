@@ -78,7 +78,6 @@ public class FileBackedArrayList extends ArrayList<String> {
     }
 
     private void writeLines(final Collection<? extends String> lines) {
-        if (!file.exists()) return;
         App.getInstance().getService().post(new Runnable() {
             @Override
             public void run() {
