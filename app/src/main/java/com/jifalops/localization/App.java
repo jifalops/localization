@@ -9,9 +9,18 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.jifalops.localization.bluetooth.BtHelper;
 import com.jifalops.localization.datatypes.NnSettings;
 import com.jifalops.localization.util.FileBackedArrayList;
@@ -24,6 +33,8 @@ import java.io.File;
  * App is the central area for managing global application state.
  */
 public class App extends ServiceThreadApplication {
+    private static final String TAG = App.class.getSimpleName();
+
     public static final String NSD_SERVICE_PREFIX      = "localiz_";
     public static final String WIFI_BEACON_SSID_PREFIX = "localiz_";
 
@@ -80,6 +91,11 @@ public class App extends ServiceThreadApplication {
     public NnSettings tofBtleSettings;
 
     public String wifiMac, btMac;
+    public FirebaseUser firebaseUser;
+    public DatabaseReference database;
+    private FirebaseAuth auth;
+    private FirebaseAuth.AuthStateListener authListener;
+
 
     @Override
     public void onCreate() {
@@ -87,16 +103,54 @@ public class App extends ServiceThreadApplication {
         instance = this;
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
+        initWifiMac();
+        initBtMac();
+
+        auth = FirebaseAuth.getInstance();
+        authListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                firebaseUser = firebaseAuth.getCurrentUser();
+                if (firebaseUser != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + firebaseUser.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+            }
+        };
+
+        database = FirebaseDatabase.getInstance().getReference();
+
         bindLocalService(this, new LocalServiceConnection() {
             @Override
             public void onServiceConnected(LocalService service) {
                 loadDataFiles();
-            }
-            @Override public void onServiceDisconnected(ComponentName className) {}
-        });
+                auth.addAuthStateListener(authListener);
+                auth.signInAnonymously()
+                        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                Log.d(TAG, "signInAnonymously:onComplete:" + task.isSuccessful());
 
-        initWifiMac();
-        initBtMac();
+                                // If sign in fails, display a message to the user. If sign in succeeds
+                                // the auth state listener will be notified and logic to handle the
+                                // signed in user can be handled in the listener.
+                                if (!task.isSuccessful()) {
+                                    Log.w(TAG, "signInAnonymously", task.getException());
+                                    Toast.makeText(App.this, "Authentication failed.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+            }
+            @Override public void onServiceDisconnected(ComponentName className) {
+                if (authListener != null) {
+                    auth.removeAuthStateListener(authListener);
+                }
+            }
+        });
     }
 
     private void initWifiMac() {
@@ -110,7 +164,7 @@ public class App extends ServiceThreadApplication {
                     if (state == WifiManager.WIFI_STATE_ENABLED) {
                         wifiMac = wifi.getMacAddress();
                         if (TextUtils.isEmpty(wifiMac)) {
-                            Log.e("App", "WiFi is enabled but no MAC address available");
+                            Log.e(TAG, "WiFi is enabled but no MAC address available");
                         } else {
                             unregisterReceiver(this);
                         }
@@ -131,7 +185,7 @@ public class App extends ServiceThreadApplication {
                     if (state == BluetoothAdapter.STATE_ON) {
                         btMac = bt.getMacAddress();
                         if (TextUtils.isEmpty(btMac)) {
-                            Log.e("App", "BT is enabled but no MAC address available");
+                            Log.e(TAG, "BT is enabled but no MAC address available");
                         } else {
                             unregisterReceiver(this);
                         }
