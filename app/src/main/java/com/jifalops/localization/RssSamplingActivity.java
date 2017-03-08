@@ -23,7 +23,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.jifalops.localization.datatypes.RangingParams;
+import com.jifalops.localization.datatypes.RefiningParams;
 import com.jifalops.localization.util.SimpleLog;
 
 import java.util.ArrayList;
@@ -397,7 +397,7 @@ public class RssSamplingActivity extends AbsActivity {
 
         @Override
         public void onRecordAdded(String signal, RssSamplingHelper.Device device,
-                                  RangingParams.Sample r, float immediateRange, float refinedRange) {
+                                  RefiningParams.Sample r, float immediateRange, float refinedRange) {
             updateCountView(signal);
         }
 

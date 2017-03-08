@@ -23,6 +23,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.jifalops.localization.bluetooth.BtHelper;
 import com.jifalops.localization.datatypes.RangingParams;
+import com.jifalops.localization.datatypes.RefiningParams;
 import com.jifalops.localization.util.FileBackedArrayList;
 import com.jifalops.localization.wifi.WifiHelper;
 
@@ -35,31 +36,29 @@ import java.io.File;
 public class App extends ServiceThreadApplication {
     private static final String TAG = App.class.getSimpleName();
 
-    public static final String NSD_SERVICE_PREFIX      = "localiz_";
-    public static final String WIFI_BEACON_SSID_PREFIX = "localiz_";
+    public static final String NSD_SERVICE_PREFIX       = "localiz_";
+    public static final String WIFI_BEACON_SSID_PREFIX  = "localiz_";
 
-    public static final String SIGNAL_BT           = "bt";
-    public static final String SIGNAL_BTLE         = "btle";
-    public static final String SIGNAL_WIFI         = "wifi";
-    public static final String SIGNAL_WIFI5G       = "wifi5g";
+    public static final String SIGNAL_BT                = "bt";
+    public static final String SIGNAL_BTLE              = "btle";
+    public static final String SIGNAL_WIFI              = "wifi";
+    public static final String SIGNAL_WIFI5G            = "wifi5g";
 
-    public static final String DATA_RSSI           = "rssi";
-    public static final String DATA_SAMPLES        = "samples";
-    public static final String DATA_ESTIMATORS     = "estimators";
+    // Raw sample caches
+    public static final String FILE_RSS_WIFI4G_SAMPLES  = "rss_wifi4g_samples.csv";
+    public static final String FILE_RSS_WIFI5G_SAMPLES  = "rss_wifi5g_samples.csv";
+    public static final String FILE_RSS_BT_SAMPLES      = "rss_bt_samples.csv";
+    public static final String FILE_RSS_BTLE_SAMPLES    = "rss_btle_samples.csv";
+    public static final String FILE_TOF_BT_HCI_SAMPLES  = "tof_bt_hci_samples.csv";
+    public static final String FILE_TOF_BT_JAVA_SAMPLES = "tof_bt_java_samples.csv";
 
-    public static final String FILE_RSS_WIFI4G     = "rss_wifi4g.csv";
-    public static final String FILE_RSS_WIFI5G     = "rss_wifi5g.csv";
-    public static final String FILE_RSS_BT         = "rss_bt.csv";
-    public static final String FILE_RSS_BTLE       = "rss_btle.csv";
-    public static final String FILE_TOF_BT_HCI     = "tof_bt_hci.csv";
-    public static final String FILE_TOF_BT_JAVA    = "tof_bt_java.csv";
-
-    public static final String FILE_NN_RSS_WIFI4G  = "nn_rss_wifi4g.csv";
-    public static final String FILE_NN_RSS_WIFI5G  = "nn_rss_wifi5g.csv";
-    public static final String FILE_NN_RSS_BT      = "nn_rss_bt.csv";
-    public static final String FILE_NN_RSS_BTLE    = "nn_rss_btle.csv";
-    public static final String FILE_NN_TOF_BT_HCI  = "nn_tof_bt_hci.csv";
-    public static final String FILE_NN_TOF_BT_JAVA = "nn_tof_bt_java.csv";
+    // Ranging estimate caches
+    public static final String FILE_RSS_WIFI4G_RANGING  = "rss_wifi4g_ranging.csv";
+    public static final String FILE_RSS_WIFI5G_RANGING  = "rss_wifi5g_ranging.csv";
+    public static final String FILE_RSS_BT_RANGING      = "rss_bt_ranging.csv";
+    public static final String FILE_RSS_BTLE_RANGING    = "rss_btle_ranging.csv";
+    public static final String FILE_TOF_BT_HCI_RANGING  = "tof_bt_hci_ranging.csv";
+    public static final String FILE_TOF_BT_JAVA_RANGING = "tof_bt_java_ranging.csv";
 
     private static App instance;
     public static App getInstance() {
@@ -68,20 +67,28 @@ public class App extends ServiceThreadApplication {
 
     private SharedPreferences prefs;
 
-    public FileBackedArrayList rssWifi4gList;
-    public FileBackedArrayList rssWifi5gList;
-    public FileBackedArrayList rssBtList;
-    public FileBackedArrayList rssBtleList;
-    public FileBackedArrayList tofBtHciList;
-    public FileBackedArrayList tofBtJavaList;
+    // Samples cache
+    public FileBackedArrayList rssWifi4gSamples;
+    public FileBackedArrayList rssWifi5gSamples;
+    public FileBackedArrayList rssBtSamples;
+    public FileBackedArrayList rssBtleSamples;
+    public FileBackedArrayList tofBtHciSamples;
+    public FileBackedArrayList tofBtJavaSamples;
 
-    // These files are only one line.
-    public FileBackedArrayList nnRssWifi4gList;
-    public FileBackedArrayList nnRssWifi5gList;
-    public FileBackedArrayList nnRssBtList;
-    public FileBackedArrayList nnRssBtleList;
-    public FileBackedArrayList nnTofBtHciList;
-    public FileBackedArrayList nnTofBtJavaList;
+    // Ranging cache
+    public FileBackedArrayList rssWifi4gRanging;
+    public FileBackedArrayList rssWifi5gRanging;
+    public FileBackedArrayList rssBtRanging;
+    public FileBackedArrayList rssBtleRanging;
+    public FileBackedArrayList tofBtHciRanging;
+    public FileBackedArrayList tofBtJavaRanging;
+    
+    public RefiningParams rssWifi4gRefiningParams;
+    public RefiningParams rssWifi5gRefiningParams;
+    public RefiningParams rssBtRefiningParams;
+    public RefiningParams rssBtleRefiningParams;
+    public RefiningParams tofBtHciRefiningParams;
+    public RefiningParams tofBtJavaRefiningParams;
 
     public RangingParams rssWifi4gRangingParams;
     public RangingParams rssWifi5gRangingParams;
@@ -114,6 +121,7 @@ public class App extends ServiceThreadApplication {
                 if (firebaseUser != null) {
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + firebaseUser.getUid());
+                    fetchParameters();
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
@@ -197,49 +205,26 @@ public class App extends ServiceThreadApplication {
 
     private void loadDataFiles() {
         File dir = this.getExternalFilesDir(null);
-        rssWifi4gList = new FileBackedArrayList(new File(dir, FILE_RSS_WIFI4G), null);
-        rssWifi5gList = new FileBackedArrayList(new File(dir, FILE_RSS_WIFI5G), null);
-        rssBtList = new FileBackedArrayList(new File(dir, FILE_RSS_BT), null);
-        rssBtleList = new FileBackedArrayList(new File(dir, FILE_RSS_BTLE), null);
-        tofBtHciList = new FileBackedArrayList(new File(dir, FILE_TOF_BT_HCI), null);
-        tofBtJavaList = new FileBackedArrayList(new File(dir, FILE_TOF_BT_JAVA), null);
+        
+        // Samples cache
+        rssWifi4gSamples = new FileBackedArrayList(new File(dir, FILE_RSS_WIFI4G_SAMPLES), null);
+        rssWifi5gSamples = new FileBackedArrayList(new File(dir, FILE_RSS_WIFI5G_SAMPLES), null);
+        rssBtSamples = new FileBackedArrayList(new File(dir, FILE_RSS_BT_SAMPLES), null);
+        rssBtleSamples = new FileBackedArrayList(new File(dir, FILE_RSS_BTLE_SAMPLES), null);
+        tofBtHciSamples = new FileBackedArrayList(new File(dir, FILE_TOF_BT_HCI_SAMPLES), null);
+        tofBtJavaSamples = new FileBackedArrayList(new File(dir, FILE_TOF_BT_JAVA_SAMPLES), null);
 
-        // These files are only one line.
-        nnRssWifi4gList = new FileBackedArrayList(new File(dir, FILE_NN_RSS_WIFI4G), new Runnable() {
-            @Override
-            public void run() {
-                rssWifi4gRangingParams = new RangingParams(nnRssWifi4gList.get(0).split(","));
-            }
-        });
-        nnRssWifi5gList = new FileBackedArrayList(new File(dir, FILE_NN_RSS_WIFI5G), new Runnable() {
-            @Override
-            public void run() {
-                rssWifi5gRangingParams = new RangingParams(nnRssWifi5gList.get(0).split(","));
-            }
-        });
-        nnRssBtList = new FileBackedArrayList(new File(dir, FILE_NN_RSS_BT), new Runnable() {
-            @Override
-            public void run() {
-                rssBtRangingParams = new RangingParams(nnRssBtList.get(0).split(","));
-            }
-        });
-        nnRssBtleList = new FileBackedArrayList(new File(dir, FILE_NN_RSS_BTLE), new Runnable() {
-            @Override
-            public void run() {
-                rssBtleRangingParams = new RangingParams(nnRssBtleList.get(0).split(","));
-            }
-        });
-        nnTofBtHciList = new FileBackedArrayList(new File(dir, FILE_NN_TOF_BT_HCI), new Runnable() {
-            @Override
-            public void run() {
-                tofBtHciRangingParams = new RangingParams(nnTofBtHciList.get(0).split(","));
-            }
-        });
-        nnTofBtJavaList = new FileBackedArrayList(new File(dir, FILE_NN_TOF_BT_JAVA), new Runnable() {
-            @Override
-            public void run() {
-                tofBtJavaRangingParams = new RangingParams(nnTofBtJavaList.get(0).split(","));
-            }
-        });
+        // Ranging cache
+        rssWifi4gRanging = new FileBackedArrayList(new File(dir, FILE_RSS_WIFI4G_RANGING), null);
+        rssWifi5gRanging = new FileBackedArrayList(new File(dir, FILE_RSS_WIFI5G_RANGING), null);
+        rssBtRanging = new FileBackedArrayList(new File(dir, FILE_RSS_BT_RANGING), null);
+        rssBtleRanging = new FileBackedArrayList(new File(dir, FILE_RSS_BTLE_RANGING), null);
+        tofBtHciRanging = new FileBackedArrayList(new File(dir, FILE_TOF_BT_HCI_RANGING), null);
+        tofBtJavaRanging = new FileBackedArrayList(new File(dir, FILE_TOF_BT_JAVA_RANGING), null);
+    }
+
+    private void fetchParameters() {
+        if (database == null || firebaseUser == null) return;
+
     }
 }

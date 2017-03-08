@@ -3,7 +3,7 @@ package com.jifalops.localization.datatypes;
 /**
  * Received Signal Strength raw sample.
  */
-public class RssBtle implements RangingParams.Sample {
+public class RssBtle implements RefiningParams.Sample {
     public final String id1, id2;
     public final int rssi, txPower;
     public final float distance;

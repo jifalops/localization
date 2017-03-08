@@ -39,6 +39,15 @@ The functional building blocks of the app have their own demo areas for testing.
 ## Developer notes
 The app uses Firebase as a remote database. The project name is localization-7535f.
 
+### Terminology
+* Raw sample - An individual sample received by the platform.
+* Refined sample - Multiple raw samples combined into one using rules obtained 
+  from the database.
+* Neural network settings - Define how to apply NN training results (done elsewhere)
+  to a sample to estimate distance.
+* Immediate range - Ranging done on a raw sample.
+* Refined range - Ranging done on a refined sample.
+
 ### Screens
 1. MainActivity - Allows to user to choose which use case they are using the app for.
    It also shows some status information.
@@ -53,6 +62,76 @@ The app uses Firebase as a remote database. The project name is localization-753
    on a 2D coordinate system. This is only available using RSS.
 5. DemoActivity - Try individual demos of the app's functional building blocks.
 
+### Data types
+
+#### RSS sample
+Raw samples of received signal strength. All RSS types have the same base fields.
+* id1 - Local MAC address
+* id2 - Remote MAC address
+* rss - Received signal strength in dBm
+* dist - Actual distance in meters
+
+WiFi 2.4 GHz and 5 GHz add two fields to the base type.
+* freq - Frequency in MHz (roughly 2400 or 5000)
+* width - Channel width in MHz, either 20, 40, 80, or 160.
+
+  Note that NN training sets that include freq and width will likely over-fit
+  unless a substantially large and diverse set of samples are collected.
+
+Bluetooth LE adds one field to the base type.
+* txPower - Transmit power in dBm, or Integer.MIN_VALUE if unavailable.
+
+#### TOF sample
+Raw samples of Bluetooth measurements at both the HCI/snoop level and Java level.
+* id1 - Local MAC address
+* id2 - Remote MAC address
+* tof - Time of flight in nanoseconds
+* dist - Actual distance in meters
+
+#### RefiningParams (from database)
+Define how to combine multiple raw samples into a refined sample.
+* samples - The number of raw samples to collect, before dropping.
+* dropHighest - Drop the highest _n_ rssi values before applying `method`.
+* dropLowest - Drop the lowest _n_ rssi values before applying `method`.
+* method - How to combine the samples.
+  Must be "median", "mean", "max", or "min".
+
+Note RSSI are negative numbers so "highest" and "max" refer to values closest to zero.
+
+#### RangingParams (from database)
+The describe how to calculate the range of a given sample.
+* inputs - The number of inputs neurons the NN used. The number must be <= the number of
+  inputs on the current data type. WiFi types can have up to 3 inputs for example.
+* hidden - The number of hidden neurons the NN used.
+* maxRange - Upper bound for ranging estimates. Should be 100 for WiFi or 10 for BT,
+  but you can set other values.
+* weights - The array of weights resulting from NN training/testing.
+  The NN is MLP so the number of weights should be equal to 
+  `hidden * (inputs + outputs + 1) + outputs`. The number of outputs 
+  is always 1, so if using 3 inputs and 2 hidden, there should be 11 weights.
+ 
+  Note that all weights must be between -1 and 1, inclusive.
+  The inputs and outputs of the NN will be scaled. RSS ranges 
+  from -120 dBm to 0 dBm, and would be plugged into the NN as -1 and 1 respectively.
+
+Example use of RefiningParams and RangingParams
+  
+5 samples are collected from a single device, 1 is dropped from the high and low end, then the median
+is calculated from the remaining 3 samples. The median is plugged into the NN
+testing function, which uses inputs, hidden, maxRange, and weights to calculate
+the estimated range of that device.
+
+#### RangingResult
+For collecting data on the effectiveness of the current RefiningParams and RangingParams.
+* id1 - The local device
+* id2 - The remote device
+* rss - The refined signal strength
+* freq - The refined frequency (WiFi only)
+* width - The refined channel width (WiFi only)
+* txPower - The refined transmit power (BTLE only)
+* dist - The acutal distance
+* range - The range estimate using the NN
+* fspl - The constant free space path loss range calculation, for comparison.
 
 ### Local storage
 Most data will need to be stored locally. Anything to be sent to or received from 
@@ -63,75 +142,44 @@ When collecting raw samples they are stored as they come in. After the user send
 samples to the remote database and they are received, those samples are purged
 from storage.
 
-##### RSS sample fields
-These apply to 2.4GHz WiFi, 5GHz WiFi, Bluetooth, and Bluetooth LE.
-* mac1 - Local MAC address
-* mac2 - Remote MAC address
-* rss - Received signal strength in dBm
-* freq - Frequency in MHz (roughly 2400 or 5000)
-* width - Channel width in MHz, either 20, 40, 80, or 160.
-* dist - Actual distance in meters
-
-Note that NN training sets that include freq and width will likely over-fit
-unless a substantially large and diverse set of samples are collected.
-
-##### TOF sample fields
-These apply to Bluetooth measurements at both the HCI/snoop level and Java level.
-* mac1 - Local MAC address
-* mac2 - Remote MAC address
-* tof - Time of flight in nanoseconds
-* dist - Actual distance in meters
-
-#### Interpreted results (RangingParams)
-* samples - The number of raw samples to collect.
-* drop - The number of samples to drop from both the high and low end
-  before applying `method`.
-* method - How to combine raw samples into a ranging sample.
-  Must be "median" or "mean".
-* inputs - How many inputs the NN uses. Either 1, 2, or 3, depending on whether 
-  frequency and channel width should be included.
-  TOF always has 1 input.
-* hidden - The number of hidden neurons that were used in the NN.
-* maxRange - Upper bound for ranging estimates. Should be 100 for WiFi or 10 for BT,
-  but you can set other values.
-* weights - The array of weights resulting from NN training/testing.
-  The NN is MLP so the number of weights should be equal to 
-  `hidden * (inputs + outputs + 1) + outputs`. The number of outputs 
-  is always 1, so if using 3 inputs and 2 hidden, there should be 11 weights.
- 
-  Note that the inputs and outputs of the NN must be scaled. RSS ranges 
-  from -120 dBm to 0 dBm, and would be plugged into the NN as -1 and 1 respectively.
-  All weights must be between -1 and 1, inclusive.
-
-###### Example
-5 samples are collected from a single device, 1 is dropped from the high and low end, then the median
-is calculated from the remaining 3 samples. The median is plugged into the NN
-testing function, which uses inputs, hidden, maxRange, and weights to calculate
-the estimated range of that device.
-
+#### Ranging results
+Written when raw samples are being collected and RangingParams are available.
 
 #### User preferences
 * Debug mode
 
 #### File names
-All files except user preferences are stored in the app's storage on the SD card.
-Raw samples and NN settings are stored as .csv files without quotes.
+Sample collection or range testing involves caching to disk and sending manually.
 
-Raw samples 
-* rss_wifi4g.csv
-* rss_wifi5g.csv
-* rss_bt.csv
-* rss_btle.csv
-* tof_bt_hci.csv
-* tof_bt_java.csv
+Raw samples (cache before sending)
+* rss_wifi4g_samples.csv
+* rss_wifi5g_samples.csv
+* rss_bt_samples.csv
+* rss_btle_samples.csv
+* tof_bt_hci_samples.csv
+* tof_bt_java_samples.csv
 
-Neural network settings (samples, method, drop, inputs, hidden, maxRange, weights...)
-* nn_rss_wifi4g.csv
-* nn_rss_wifi5g.csv
-* nn_rss_bt.csv
-* nn_rss_btle.csv
-* nn_tof_bt_hci.csv
-* nn_tof_bt_java.csv
+Ranging estimates (cache before sending)
+* rss_wifi4g_ranging.csv
+* rss_wifi5g_ranging.csv
+* rss_bt_ranging.csv
+* rss_btle_ranging.csv
+* tof_bt_hci_ranging.csv
+* tof_bt_java_ranging.csv
+
+
+### Ranging estimate results
+Sampling at known distances after RangingParams are ready allows testing and
+comparing ranging algorithms. There are two algorithms:
+* Free space path loss - a statically defined and well known algorithm.
+* The interpreted results / RangingParams - a modifiable algorithm described above.
+
+Both algorithms can be tested in two different ways.
+* Immediate ranging - estimate distance on every raw sample.
+* Refined ranging - Combine multiple raw samples as described by the current RangingParams
+  before estimation.
+  
+Note only estimates that are refined are sent to the database.
 
 
 ### Old repos

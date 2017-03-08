@@ -3,7 +3,7 @@ package com.jifalops.localization.datatypes;
 /**
  * Received Signal Strength raw sample.
  */
-public class RssWifi implements RangingParams.Sample {
+public class RssWifi implements RefiningParams.Sample {
     public final String id1, id2;
     public final int rssi, freq, width;
     public final float distance;

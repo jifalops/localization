@@ -3,7 +3,7 @@ package com.jifalops.localization.datatypes;
 /**
  * Time of Flight raw sample.
  */
-public class Tof implements RangingParams.Sample {
+public class Tof implements RefiningParams.Sample {
     public final String id1, id2;
     public final int tof;
     public final float distance;

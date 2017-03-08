@@ -8,10 +8,10 @@ import android.content.Context;
 
 import com.jifalops.localization.bluetooth.BtBeacon;
 import com.jifalops.localization.bluetooth.BtleBeacon;
-import com.jifalops.localization.datatypes.RangingParams;
+import com.jifalops.localization.datatypes.Rss;
 import com.jifalops.localization.datatypes.RssBtle;
 import com.jifalops.localization.datatypes.RssWifi;
-import com.jifalops.localization.datatypes.Rssi;
+import com.jifalops.localization.datatypes.Sample;
 import com.jifalops.localization.util.SimpleLog;
 import com.jifalops.localization.wifi.WifiScanner;
 
@@ -96,10 +96,10 @@ public class RssSamplingHelper {
     }
 
     public void clearPendingSendLists() {
-        App.getInstance().rssWifi4gList.clear();
-        App.getInstance().rssWifi5gList.clear();
-        App.getInstance().rssBtList.clear();
-        App.getInstance().rssBtleList.clear();
+        App.getInstance().rssWifi4gSamples.clear();
+        App.getInstance().rssWifi5gSamples.clear();
+        App.getInstance().rssBtSamples.clear();
+        App.getInstance().rssBtleSamples.clear();
     }
     
 
@@ -225,16 +225,16 @@ public class RssSamplingHelper {
     void addBtRecord(Device device, int rssi) {
         if (collectEnabled) {
             if (device.isDistanceKnown && rssi <= 0 && distance > 0) {
-                Rssi record = new Rssi(App.getInstance().btMac, device.mac, rssi, distance);
+                Rss record = new Rss(App.getInstance().btMac, device.mac, rssi, distance);
                 float immediateRange = 0, refinedRange = 0;
-                App.getInstance().rssBtList.add(record.toString());
+                App.getInstance().rssBtSamples.add(record.toString());
                 if (App.getInstance().rssBtRangingParams != null) {
                     immediateRange = App.getInstance().rssBtRangingParams.estimateRange(record.getInputs());
                     refinedRange = App.getInstance().rssBtRangingParams.sampler.add(record);
                 }
-                String s = device.id + " (BT): " + rssi + ". Act: " + distance;
-                if (immediateRange > 0) s += " Imm: " + Math.round(immediateRange * 10) / 10;
-                if (refinedRange > 0) s += " Ref: " + Math.round(immediateRange * 10) / 10;
+                String s = "Device " + device.id + " (BT): " + rssi + ". Act: " + distance;
+                if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;
+                if (refinedRange > 0) s += ". Ref: " + Math.round(immediateRange * 10) / 10;
                 addEvent(LOG_INFORMATIVE,  s);
                 for (SamplerListener l : listeners) l.onRecordAdded(App.SIGNAL_BT, device, record,
                         immediateRange, refinedRange);
@@ -249,14 +249,14 @@ public class RssSamplingHelper {
             if (device.isDistanceKnown && rssi <= 0 && distance > 0) {
                 RssBtle record = new RssBtle(App.getInstance().btMac, device.mac, rssi, txPower, distance);
                 float immediateRange = 0, refinedRange = 0;
-                App.getInstance().rssBtleList.add(record.toString());
+                App.getInstance().rssBtleSamples.add(record.toString());
                 if (App.getInstance().rssBtleRangingParams != null) {
                     immediateRange = App.getInstance().rssBtleRangingParams.estimateRange(record.getInputs());
                     refinedRange = App.getInstance().rssBtleRangingParams.sampler.add(record);
                 }
-                String s = device.id + " (LE): " + rssi + ". Act: " + distance;
-                if (immediateRange > 0) s += " Imm: " + Math.round(immediateRange * 10) / 10;
-                if (refinedRange > 0) s += " Ref: " + Math.round(immediateRange * 10) / 10;
+                String s = "Device " + device.id + " (LE): " + rssi + ". Act: " + distance;
+                if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;
+                if (refinedRange > 0) s += ". Ref: " + Math.round(immediateRange * 10) / 10;
                 addEvent(LOG_INFORMATIVE,  s);
                 for (SamplerListener l : listeners) l.onRecordAdded(App.SIGNAL_BTLE, device, record,
                         immediateRange, refinedRange);
@@ -271,14 +271,14 @@ public class RssSamplingHelper {
             if (device.isDistanceKnown && rssi <= 0 && distance > 0) {
                 RssWifi record = new RssWifi(App.getInstance().btMac, device.mac, rssi, freq, width, distance);
                 float immediateRange = 0, refinedRange = 0;
-                App.getInstance().rssWifi4gList.add(record.toString());
+                App.getInstance().rssWifi4gSamples.add(record.toString());
                 if (App.getInstance().rssWifi4gRangingParams != null) {
                     immediateRange = App.getInstance().rssWifi4gRangingParams.estimateRange(record.getInputs());
                     refinedRange = App.getInstance().rssWifi4gRangingParams.sampler.add(record);
                 }
-                String s = device.id + " (4G): " + rssi + ". Act: " + distance;
-                if (immediateRange > 0) s += " Imm: " + Math.round(immediateRange * 10) / 10;
-                if (refinedRange > 0) s += " Ref: " + Math.round(immediateRange * 10) / 10;
+                String s = "Device " + device.id + " (4G): " + rssi + ". Act: " + distance;
+                if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;
+                if (refinedRange > 0) s += ". Ref: " + Math.round(immediateRange * 10) / 10;
                 addEvent(LOG_INFORMATIVE,  s);
                 for (SamplerListener l : listeners) l.onRecordAdded(App.SIGNAL_WIFI, device, record,
                         immediateRange, refinedRange);
@@ -293,14 +293,14 @@ public class RssSamplingHelper {
             if (device.isDistanceKnown && rssi <= 0 && distance > 0) {
                 RssWifi record = new RssWifi(App.getInstance().btMac, device.mac, rssi, freq, width, distance);
                 float immediateRange = 0, refinedRange = 0;
-                App.getInstance().rssWifi5gList.add(record.toString());
+                App.getInstance().rssWifi5gSamples.add(record.toString());
                 if (App.getInstance().rssWifi5gRangingParams != null) {
                     immediateRange = App.getInstance().rssWifi5gRangingParams.estimateRange(record.getInputs());
                     refinedRange = App.getInstance().rssWifi5gRangingParams.sampler.add(record);
                 }
-                String s = device.id + " (5G): " + rssi + ". Act: " + distance;
-                if (immediateRange > 0) s += " Imm: " + Math.round(immediateRange * 10) / 10;
-                if (refinedRange > 0) s += " Ref: " + Math.round(immediateRange * 10) / 10;
+                String s = "Device " + device.id + " (5G): " + rssi + ". Act: " + distance;
+                if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;
+                if (refinedRange > 0) s += ". Ref: " + Math.round(immediateRange * 10) / 10;
                 addEvent(LOG_INFORMATIVE,  s);
                 for (SamplerListener l : listeners) l.onRecordAdded(App.SIGNAL_WIFI5G, device, record,
                         immediateRange, refinedRange);
@@ -313,10 +313,10 @@ public class RssSamplingHelper {
 
     public int getCount(String signal) {
         switch (signal) {
-            case App.SIGNAL_BT:     return App.getInstance().rssBtList.size();
-            case App.SIGNAL_BTLE:   return App.getInstance().rssBtleList.size();
-            case App.SIGNAL_WIFI:   return App.getInstance().rssWifi4gList.size();
-            case App.SIGNAL_WIFI5G: return App.getInstance().rssWifi5gList.size();
+            case App.SIGNAL_BT:     return App.getInstance().rssBtSamples.size();
+            case App.SIGNAL_BTLE:   return App.getInstance().rssBtleSamples.size();
+            case App.SIGNAL_WIFI:   return App.getInstance().rssWifi4gSamples.size();
+            case App.SIGNAL_WIFI5G: return App.getInstance().rssWifi5gSamples.size();
         }
         return 0;
     }
@@ -405,7 +405,7 @@ public class RssSamplingHelper {
     public interface SamplerListener {
         void onMessageLogged(int level, String msg);
         void onDeviceFound(Device device);
-        void onRecordAdded(String signal, Device device, RangingParams.Sample r,
+        void onRecordAdded(String signal, Device device, Sample r,
                            float immediateRange, float refinedRange);
         void onSentSuccess(String signal, int count);
         void onSentFailure(String signal, int count, int respCode, String resp, String result);
