@@ -397,7 +397,7 @@ public class RssSamplingActivity extends AbsActivity {
 
         @Override
         public void onRecordAdded(String signal, RssSamplingHelper.Device device,
-                                  RangingParams.Sample r, float range) {
+                                  RangingParams.Sample r, float immediateRange, float refinedRange) {
             updateCountView(signal);
         }
 

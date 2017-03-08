@@ -128,7 +128,7 @@ public class RangingParams {
 
 
     public interface Sample {
-        int[] getInputs();
+        double[] getInputs();
     }
 
 

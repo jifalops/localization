@@ -30,7 +30,7 @@ public class RssBtle implements RangingParams.Sample {
     }
 
     @Override
-    public int[] getInputs() {
-        return new int[] { rssi, txPower };
+    public double[] getInputs() {
+        return new double[] { rssi, txPower };
     }
 }

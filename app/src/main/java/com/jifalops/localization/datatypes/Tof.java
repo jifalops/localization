@@ -28,7 +28,7 @@ public class Tof implements RangingParams.Sample {
     }
 
     @Override
-    public int[] getInputs() {
-        return new int[] { tof };
+    public double[] getInputs() {
+        return new double[] { tof };
     }
 }

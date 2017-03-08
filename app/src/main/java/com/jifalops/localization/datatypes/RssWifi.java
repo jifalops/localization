@@ -32,7 +32,7 @@ public class RssWifi implements RangingParams.Sample {
     }
 
     @Override
-    public int[] getInputs() {
-        return new int[] { rssi, freq, width };
+    public double[] getInputs() {
+        return new double[] { rssi, freq, width };
     }
 }

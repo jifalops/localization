@@ -28,7 +28,7 @@ public class Rssi implements RangingParams.Sample {
     }
 
     @Override
-    public int[] getInputs() {
-        return new int[] { rssi };
+    public double[] getInputs() {
+        return new double[] { rssi };
     }
 }
