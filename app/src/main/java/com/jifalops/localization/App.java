@@ -6,7 +6,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 
 import com.jifalops.localization.datatypes.NnSettings;
-import com.jifalops.localization.file.FileBackedArrayList;
+import com.jifalops.localization.util.FileBackedArrayList;
 
 import java.io.File;
 

@@ -23,6 +23,9 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.jifalops.localization.datatypes.Rssi;
+import com.jifalops.localization.util.SimpleLog;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,8 +82,8 @@ public class RssSamplingActivity extends AbsActivity {
         deviceIdView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder b = new AlertDialog.Builder(RssiSamplingActivity.this);
-                final EditText input = new EditText(RssiSamplingActivity.this);
+                AlertDialog.Builder b = new AlertDialog.Builder(RssSamplingActivity.this);
+                final EditText input = new EditText(RssSamplingActivity.this);
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -101,7 +104,7 @@ public class RssSamplingActivity extends AbsActivity {
                                 id = Integer.valueOf(s);
                                 RssSamplingHelper.Device d = rssSamplingHelper.getDevice(id - 1);
                                 if (d != null) {
-                                    d.isDistanceKnown = true;
+//                                    d.isDistanceKnown = true;
                                     deviceIds.add(d.id);
                                 }
                             }
@@ -138,7 +141,7 @@ public class RssSamplingActivity extends AbsActivity {
             @Override
             public void afterTextChanged(Editable s) {
                 try {
-                    rssSamplingHelper.setDistance(Double.valueOf(s.toString()));
+                    rssSamplingHelper.setDistance(Float.valueOf(s.toString()));
                 } catch (NumberFormatException e) {
                     distanceView.setText(rssSamplingHelper.getDistance() + "");
                 }
@@ -230,7 +233,7 @@ public class RssSamplingActivity extends AbsActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
 //        SubMenu sub = menu.getItem(0);
-        menu.findItem(R.id.action_persist).setChecked(service != null && service.isPersistent());
+        menu.findItem(R.id.action_persist).setChecked(App.getInstance().isPersistent());
         menu.findItem(R.id.logImportant).setChecked(
                 logLevel == RssSamplingHelper.LOG_IMPORTANT);
         menu.findItem(R.id.logInformative).setChecked(
@@ -246,7 +249,7 @@ public class RssSamplingActivity extends AbsActivity {
             case R.id.action_settings:
                 return true;
             case R.id.action_persist:
-                if (service != null && service.isPersistent()) {
+                if (App.getInstance().isPersistent()) {
                     item.setChecked(false);
                     setPersistent(false);
                 } else {
@@ -265,28 +268,6 @@ public class RssSamplingActivity extends AbsActivity {
                             }
                         }).show();
                 return true;
-            case R.id.action_clearSamples:
-                new AlertDialog.Builder(this)
-                        .setMessage("Clear all training samples (not recommended)?")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                rssSamplingHelper.clearSamples();
-                            }
-                        }).show();
-                return true;
-            case R.id.action_trimSamples:
-                new AlertDialog.Builder(this)
-                        .setMessage("Trim samples that took longer than allowed?")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                int count = rssSamplingHelper.trimLongSamples();
-                                Toast.makeText(RssiSamplingActivity.this,
-                                        "Trimmed " + count + " samples.", Toast.LENGTH_LONG).show();
-                            }
-                        }).show();
-                return true;
             case R.id.logImportant:
                 logLevel = RssSamplingHelper.LOG_IMPORTANT;
                 return true;
@@ -301,21 +282,14 @@ public class RssSamplingActivity extends AbsActivity {
     }
 
     void setPersistent(boolean persist) {
-        if (service == null) return;
-        Object obj = persist ? rssSamplingHelper : null;
-        service.setPersistent(persist, getClass());
-        service.setCachedObject(SAMPLER, obj);
+        App.getInstance().setPersistent(persist, getClass());
     }
 
     void updateSendCounts() {
-        updateCountView(App.SIGNAL_BT, App.DATA_RSSI);
-        updateCountView(App.SIGNAL_BT, App.DATA_WINDOW);
-        updateCountView(App.SIGNAL_BTLE, App.DATA_RSSI);
-        updateCountView(App.SIGNAL_BTLE, App.DATA_WINDOW);
-        updateCountView(App.SIGNAL_WIFI, App.DATA_RSSI);
-        updateCountView(App.SIGNAL_WIFI, App.DATA_WINDOW);
-        updateCountView(App.SIGNAL_WIFI5G, App.DATA_RSSI);
-        updateCountView(App.SIGNAL_WIFI5G, App.DATA_WINDOW);
+        updateCountView(App.SIGNAL_BT);
+        updateCountView(App.SIGNAL_BTLE);
+        updateCountView(App.SIGNAL_WIFI);
+        updateCountView(App.SIGNAL_WIFI5G);
     }
 
     void loadDevicesAndEvents() {
@@ -324,7 +298,7 @@ public class RssSamplingActivity extends AbsActivity {
         for (RssSamplingHelper.Device d : rssSamplingHelper.getDevices()) {
             deviceLogView.append(d.toString() + "\n");
         }
-        List<SimpleLog.LogItem> items =  rssSamplingHelper.getLog().getByImportance(logLevel, true);
+        List<SimpleLog.LogItem> items =  rssSamplingHelper.getLog().getBypriority(logLevel, true);
         for (SimpleLog.LogItem item : items) {
             eventLogView.append(item.msg + "\n");
         }
@@ -381,7 +355,7 @@ public class RssSamplingActivity extends AbsActivity {
         distanceView.setText(rssSamplingHelper.getDistance() + "");
         List<Integer> ids = new ArrayList<>();
         for (RssSamplingHelper.Device d : rssSamplingHelper.getDevices()) {
-            if (d.isDistanceKnown) ids.add(d.id);
+//            if (d.isDistanceKnown) ids.add(d.id);
         }
         if (ids.size() > 0) deviceIdView.setText(TextUtils.join(",", ids));
     }
@@ -426,66 +400,29 @@ public class RssSamplingActivity extends AbsActivity {
         }
 
         @Override
-        public void onDataLoadedFromDisk(RssiHelper rssiHelper, WindowHelper windowHelper,
-                                         SampleHelper sampleHelper) {
-            updateSendCounts();
-        }
-
-        @Override
         public void onRecordAdded(String signal, RssSamplingHelper.Device device, Rssi r) {
-            updateCountView(signal, App.DATA_RSSI);
+            updateCountView(signal);
         }
 
         @Override
-        public void onSampleAdded(String signal, double[] sample) {
-            updateCountView(signal, App.DATA_RSSI);
-            updateCountView(signal, App.DATA_WINDOW);
+        public void onSentSuccess(String signal, int count) {
+            updateCountView(signal);
         }
 
         @Override
-        public void onSentSuccess(String signal, String dataType, int count) {
-            updateCountView(signal, dataType);
-        }
-
-        @Override
-        public void onSentFailure(String signal, String dataType, int count, int respCode, String resp, String result) {
-            updateCountView(signal, dataType);
-        }
-
-        @Override
-        public void onSentFailure(String signal, String dataType, int count, String volleyError) {
-            updateCountView(signal, dataType);
+        public void onSentFailure(String signal, int count, int respCode, String resp, String result) {
+            updateCountView(signal);
         }
     };
 
-    void updateCountView(String signal, String data) {
-        int count = rssSamplingHelper.getCount(signal, data);
+    void updateCountView(String signal) {
+        int count = rssSamplingHelper.getCount(signal);
         TextView tv = null;
         switch (signal) {
-            case App.SIGNAL_BT:
-                switch (data) {
-                    case App.DATA_RSSI:      tv = btRssiCountView; break;
-                    case App.DATA_WINDOW:    tv = btWindowCountView; break;
-                }
-                break;
-            case App.SIGNAL_BTLE:
-                switch (data) {
-                    case App.DATA_RSSI:      tv = btleRssiCountView; break;
-                    case App.DATA_WINDOW:    tv = btleWindowCountView; break;
-                }
-                break;
-            case App.SIGNAL_WIFI:
-                switch (data) {
-                    case App.DATA_RSSI:      tv = wifiRssiCountView; break;
-                    case App.DATA_WINDOW:    tv = wifiWindowCountView; break;
-                }
-                break;
-            case App.SIGNAL_WIFI5G:
-                switch (data) {
-                    case App.DATA_RSSI:      tv = wifi5gRssiCountView; break;
-                    case App.DATA_WINDOW:    tv = wifi5gWindowCountView; break;
-                }
-                break;
+            case App.SIGNAL_BT:     tv = btRssiCountView; break;
+            case App.SIGNAL_BTLE:   tv = btleRssiCountView; break;
+            case App.SIGNAL_WIFI:   tv = wifiRssiCountView; break;
+            case App.SIGNAL_WIFI5G: tv = wifi5gRssiCountView; break;
         }
         if (tv != null) tv.setText(count+"");
     }

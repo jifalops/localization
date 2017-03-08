@@ -8,13 +8,11 @@ import android.content.Context;
 import com.jifalops.localization.bluetooth.BtBeacon;
 import com.jifalops.localization.bluetooth.BtleBeacon;
 import com.jifalops.localization.datatypes.Rssi;
+import com.jifalops.localization.util.SimpleLog;
 import com.jifalops.localization.wifi.WifiScanner;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  *
@@ -27,7 +25,8 @@ public class RssSamplingHelper {
     public static class Device {
         public final int id;
         public final String mac, desc;
-        public double distance;
+        public float distance;
+        public boolean isDistanceKnown = false;
         public Device(int id, String mac, String desc) {
             this.id = id;
             this.mac = mac;
@@ -39,15 +38,19 @@ public class RssSamplingHelper {
         }
     }
 
-//    List<Rssi> bt, btle, wifi, wifi5g;
 
     final List<Device> devices = new ArrayList<>();
 
-//    final SimpleLog log = new SimpleLog();
+    final SimpleLog log = new SimpleLog();
 
     BtBeacon btBeacon;
     BtleBeacon btleBeacon;
     WifiScanner wifiScanner;
+
+    boolean shouldUseBt = false, shouldUseBtle = false, shouldUseWifi = false, shouldUseWifi5g = false;
+    boolean collectEnabled = false;
+
+    float distance = 0;
 
     private static RssSamplingHelper instance;
     public static RssSamplingHelper getInstance(Context ctx) {
@@ -65,18 +68,18 @@ public class RssSamplingHelper {
 
     }
 
-    void checkIfLoadComplete() {
-        if (rssiLoaded && windowsLoaded && samplesLoaded) {
-            for (SamplerListener l : listeners)
-                l.onDataLoadedFromDisk(rssiHelper, windowHelper, sampleHelper);
-        }
-    }
+//    void checkIfLoadComplete() {
+//        if (rssiLoaded && windowsLoaded && samplesLoaded) {
+//            for (SamplerListener l : listeners)
+//                l.onDataLoadedFromDisk(rssiHelper, windowHelper, sampleHelper);
+//        }
+//    }
 
     public SimpleLog getLog() {
         return log;
     }
 
-    public void setDistance(double d) {
+    public void setDistance(float d) {
         distance = d;
     }
 
@@ -89,103 +92,25 @@ public class RssSamplingHelper {
     }
 
     public void clearPendingSendLists() {
-        rssiHelper.btRW.truncate();
-        rssiHelper.btleRW.truncate();
-        rssiHelper.wifiRW.truncate();
-        rssiHelper.wifi5gRW.truncate();
-        windowHelper.btRW.truncate();
-        windowHelper.btleRW.truncate();
-        windowHelper.wifiRW.truncate();
-        windowHelper.wifi5gRW.truncate();
+        App.getInstance().rssWifi4gList.clear();
+        App.getInstance().rssWifi5gList.clear();
+        App.getInstance().rssBtList.clear();
+        App.getInstance().rssBtleList.clear();
     }
-
-    public void clearSamples() {
-        sampleHelper.btRW.backup(null);
-        sampleHelper.btleRW.backup(null);
-        sampleHelper.wifiRW.backup(null);
-        sampleHelper.wifi5gRW.backup(null);
-        sampleHelper.btRW.truncate();
-        sampleHelper.btleRW.truncate();
-        sampleHelper.wifiRW.truncate();
-        sampleHelper.wifi5gRW.truncate();
-    }
+    
 
     public void send() {
-        send(App.SIGNAL_BT, rssiHelper.getBt(), windowHelper.getBt(),
-                rssiHelper.btRW, windowHelper.btRW);
-        send(App.SIGNAL_BTLE, rssiHelper.getBtle(), windowHelper.getBtle(),
-                rssiHelper.btleRW, windowHelper.btleRW);
-        send(App.SIGNAL_WIFI, rssiHelper.getWifi(), windowHelper.getWifi(),
-                rssiHelper.wifiRW, windowHelper.wifiRW);
-        send(App.SIGNAL_WIFI5G, rssiHelper.getWifi5g(), windowHelper.getWifi5g(),
-                rssiHelper.wifi5gRW, windowHelper.wifi5gRW);
-        addEvent(LOG_IMPORTANT, "RSSI and Windows sent.");
+//        send(App.SIGNAL_BT, rssiHelper.getBt(), windowHelper.getBt(),
+//                rssiHelper.btRW, windowHelper.btRW);
+//        send(App.SIGNAL_BTLE, rssiHelper.getBtle(), windowHelper.getBtle(),
+//                rssiHelper.btleRW, windowHelper.btleRW);
+//        send(App.SIGNAL_WIFI, rssiHelper.getWifi(), windowHelper.getWifi(),
+//                rssiHelper.wifiRW, windowHelper.wifiRW);
+//        send(App.SIGNAL_WIFI5G, rssiHelper.getWifi5g(), windowHelper.getWifi5g(),
+//                rssiHelper.wifi5gRW, windowHelper.wifi5gRW);
+//        addEvent(LOG_IMPORTANT, "RSSI and Windows sent.");
     }
-
-    private void send(final String signal, final List<Rssi> rssi, final List<WindowRecord> windows,
-            final RssiReaderWriter rssiRW, final WindowReaderWriter windowRW) {
-
-        final int rssiSize = rssi.size(), windowSize = windows.size();
-
-        if (rssiSize > 0) {
-            final List<Rssi> toSend = new ArrayList<>(rssi);
-            rssi.clear();
-            App.sendRequest(new RssiRequest(signal, toSend,
-                    new Response.Listener<AbsRequest.MyResponse>() {
-                        @Override
-                        public void onResponse(AbsRequest.MyResponse response) {
-                            if (response.responseCode == 200) {
-                                rssiRW.truncate();
-                                for (SamplerListener l : listeners)
-                                    l.onSentSuccess(signal, App.DATA_RSSI, rssiSize);
-                            } else {
-                                rssi.addAll(toSend);
-                                for (SamplerListener l : listeners)
-                                    l.onSentFailure(signal, App.DATA_RSSI, rssiSize,
-                                        response.responseCode, response.responseMessage,
-                                        response.queryResult);
-                            }
-                        }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError volleyError) {
-                    rssi.addAll(toSend);
-                    for (SamplerListener l : listeners)
-                        l.onSentFailure(signal, App.DATA_RSSI, rssiSize,
-                            volleyError.toString());
-                }
-            }));
-        }
-        if (windowSize > 0) {
-            final List<WindowRecord> toSend = new ArrayList<>(windows);
-            windows.clear();
-            App.sendRequest(new WindowRequest(signal, toSend,
-                    new Response.Listener<AbsRequest.MyResponse>() {
-                        @Override
-                        public void onResponse(AbsRequest.MyResponse response) {
-                            if (response.responseCode == 200) {
-                                windowRW.truncate();
-                                for (SamplerListener l : listeners)
-                                    l.onSentSuccess(signal, App.DATA_WINDOW, windowSize);
-                            } else {
-                                windows.addAll(toSend);
-                                for (SamplerListener l : listeners)
-                                    l.onSentFailure(signal, App.DATA_WINDOW, windowSize,
-                                        response.responseCode, response.responseMessage,
-                                        response.queryResult);
-                            }
-                        }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError volleyError) {
-                    windows.addAll(toSend);
-                    for (SamplerListener l : listeners)
-                        l.onSentFailure(signal, App.DATA_WINDOW, windowSize, volleyError.toString());
-                }
-            }));
-        }
-    }
-
+    
     public List<Device> getDevices() {
         return devices;
     }
@@ -224,16 +149,14 @@ public class RssSamplingHelper {
     private void disableBt() {
         btBeacon.stopBeaconing();
         btBeacon.unregisterListener(btBeaconListener);
-        bt.reset();
     }
     private void enableBtle() {
-        btleBeacon.registerListener(btLeBeaconListener);
+        btleBeacon.registerListener(btleBeaconListener);
         btleBeacon.startBeaconing();
     }
     private void disableBtle() {
         btleBeacon.stopBeaconing();
-        btleBeacon.unregisterListener(btLeBeaconListener);
-        btle.reset();
+        btleBeacon.unregisterListener(btleBeaconListener);
     }
     private void enableWifi() {
         wifiScanner.registerListener(wifiScanListener);
@@ -242,8 +165,6 @@ public class RssSamplingHelper {
     private void disableWifi() {
         wifiScanner.stopScanning();
         wifiScanner.unregisterListener(wifiScanListener);
-        wifi.reset();
-        wifi5g.reset();
     }
 
     public void setShouldUseBt(boolean use) {
@@ -299,25 +220,25 @@ public class RssSamplingHelper {
 
     void addRecord(Device device, String signal, int rssi, int freq) {
         if (collectEnabled) {
-            if (device.isDistanceKnown && rssi < 0 && distance > 0) {
+            if (device.isDistanceKnown && rssi <= 0 && distance > 0) {
                 addEvent(LOG_INFORMATIVE, "Device " + device.id + ": " +
                         rssi + " dBm (" + freq + " MHz) at " +
                         distance + "m (" + signal + ").");
 //                String time = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US).format(new Date());
-                Rssi record = new Rssi(device.mac, rssi, freq,
-                        System.currentTimeMillis(), distance);
+                Rssi record = new Rssi(App.DEVICE_ID, device.mac, rssi, freq,
+                        0, distance);
                 switch (signal) {
                     case App.SIGNAL_BT:
-                        bt.add(record);
+                        App.getInstance().rssBtList.add(record.toString());
                         break;
                     case App.SIGNAL_BTLE:
-                        btle.add(record);
+                        App.getInstance().rssBtleList.add(record.toString());
                         break;
                     case App.SIGNAL_WIFI:
-                        wifi.add(record);
+                        App.getInstance().rssWifi4gList.add(record.toString());
                         break;
                     case App.SIGNAL_WIFI5G:
-                        wifi5g.add(record);
+                        App.getInstance().rssWifi5gList.add(record.toString());
                         break;
                 }
                 for (SamplerListener l : listeners) l.onRecordAdded(signal, device, record);
@@ -328,176 +249,15 @@ public class RssSamplingHelper {
         }
     }
 
-    public int getCount(String signal, String data) {
+    public int getCount(String signal) {
         switch (signal) {
-            case App.SIGNAL_BT:
-                switch (data) {
-                    case App.DATA_RSSI:     return rssiHelper.getBt().size();
-                    case App.DATA_WINDOW:   return windowHelper.getBt().size();
-                    case App.DATA_SAMPLES:  return sampleHelper.getBt().size();
-                }
-                break;
-            case App.SIGNAL_BTLE:
-                switch (data) {
-                    case App.DATA_RSSI:     return rssiHelper.getBtle().size();
-                    case App.DATA_WINDOW:   return windowHelper.getBtle().size();
-                    case App.DATA_SAMPLES:  return sampleHelper.getBtle().size();
-                }
-                break;
-            case App.SIGNAL_WIFI:
-                switch (data) {
-                    case App.DATA_RSSI:     return rssiHelper.getWifi().size();
-                    case App.DATA_WINDOW:   return windowHelper.getWifi().size();
-                    case App.DATA_SAMPLES:  return sampleHelper.getWifi().size();
-                }
-                break;
-            case App.SIGNAL_WIFI5G:
-                switch (data) {
-                    case App.DATA_RSSI:     return rssiHelper.getWifi5g().size();
-                    case App.DATA_WINDOW:   return windowHelper.getWifi5g().size();
-                    case App.DATA_SAMPLES:  return sampleHelper.getWifi5g().size();
-                }
-                break;
+            case App.SIGNAL_BT:     return App.getInstance().rssBtList.size();
+            case App.SIGNAL_BTLE:   return App.getInstance().rssBtleList.size();
+            case App.SIGNAL_WIFI:   return App.getInstance().rssWifi4gList.size();
+            case App.SIGNAL_WIFI5G: return App.getInstance().rssWifi5gList.size();
         }
         return 0;
     }
-
-    public int trimLongSamples() {
-        int btCount = 0, btleCount = 0, wifiCount = 0, wifi5gCount = 0,
-                succeeded = 0, failed = 0;
-        final List<double[]> bt = new ArrayList<>();
-        final List<double[]> btle = new ArrayList<>();
-        final List<double[]> wifi = new ArrayList<>();
-        final List<double[]> wifi5g = new ArrayList<>();
-
-        for (double[] s : sampleHelper.getBt()) {
-            if (s[7] <= App.btWindowTrigger.maxTime * 1.5) {
-                bt.add(s);
-            } else {
-                ++btCount;
-            }
-        }
-        for (double[] s : sampleHelper.getBtle()) {
-            if (s[7] <= App.btleWindowTrigger.maxTime * 1.5) {
-                btle.add(s);
-            } else {
-                ++btleCount;
-            }
-        }
-        for (double[] s : sampleHelper.getWifi()) {
-            if (s[7] <= App.wifiWindowTrigger.maxTime * 1.5) {
-                wifi.add(s);
-            } else {
-                ++wifiCount;
-            }
-        }
-        for (double[] s : sampleHelper.getWifi5g()) {
-            if (s[7] <= App.wifiWindowTrigger.maxTime * 1.5) {
-                wifi5g.add(s);
-            } else {
-                ++wifi5gCount;
-            }
-        }
-
-        if (btCount > 0) {
-            sampleHelper.btRW.backup(new AbsTextReaderWriter.CopyListener() {
-                @Override
-                public void onCopySucceeded(File from, File to) {
-                    sampleHelper.btRW.writeNumbers(bt, false, new AbsTextReaderWriter.WriteListener() {
-                        @Override
-                        public void onWriteSucceed(int linesWritten) {
-
-                        }
-
-                        @Override
-                        public void onWriteFailed(IOException e) {
-
-                        }
-                    });
-                }
-
-                @Override
-                public void onCopyFailed(IOException e) {
-
-                }
-            });
-        }
-
-        if (btleCount > 0) {
-            sampleHelper.btleRW.backup(new AbsTextReaderWriter.CopyListener() {
-                @Override
-                public void onCopySucceeded(File from, File to) {
-                    sampleHelper.btleRW.writeNumbers(btle, false, new AbsTextReaderWriter.WriteListener() {
-                        @Override
-                        public void onWriteSucceed(int linesWritten) {
-
-                        }
-
-                        @Override
-                        public void onWriteFailed(IOException e) {
-
-                        }
-                    });
-                }
-
-                @Override
-                public void onCopyFailed(IOException e) {
-
-                }
-            });
-        }
-
-        if (wifiCount > 0) {
-            sampleHelper.wifiRW.backup(new AbsTextReaderWriter.CopyListener() {
-                @Override
-                public void onCopySucceeded(File from, File to) {
-                    sampleHelper.wifiRW.writeNumbers(wifi, false, new AbsTextReaderWriter.WriteListener() {
-                        @Override
-                        public void onWriteSucceed(int linesWritten) {
-
-                        }
-
-                        @Override
-                        public void onWriteFailed(IOException e) {
-
-                        }
-                    });
-                }
-
-                @Override
-                public void onCopyFailed(IOException e) {
-
-                }
-            });
-        }
-
-        if (wifi5gCount > 0) {
-            sampleHelper.wifi5gRW.backup(new AbsTextReaderWriter.CopyListener() {
-                @Override
-                public void onCopySucceeded(File from, File to) {
-                    sampleHelper.wifi5gRW.writeNumbers(wifi5g, false, new AbsTextReaderWriter.WriteListener() {
-                        @Override
-                        public void onWriteSucceed(int linesWritten) {
-
-                        }
-
-                        @Override
-                        public void onWriteFailed(IOException e) {
-
-                        }
-                    });
-                }
-
-                @Override
-                public void onCopyFailed(IOException e) {
-
-                }
-            });
-        }
-
-        return btCount + btleCount + wifiCount + wifi5gCount;
-    }
-
 
     final BtBeacon.BtBeaconListener btBeaconListener = new BtBeacon.BtBeaconListener() {
         @Override
@@ -517,7 +277,7 @@ public class RssSamplingHelper {
         }
     };
 
-    final BtLeBeacon.BtLeBeaconListener btLeBeaconListener = new BtLeBeacon.BtLeBeaconListener() {
+    final BtleBeacon.BtleBeaconListener btleBeaconListener = new BtleBeacon.BtleBeaconListener() {
         @Override
         public void onAdvertiseNotSupported() {
             addEvent(LOG_IMPORTANT, "BTLE advertisement not supported on this device.");
@@ -583,12 +343,9 @@ public class RssSamplingHelper {
     public interface SamplerListener {
         void onMessageLogged(int level, String msg);
         void onDeviceFound(Device device);
-        void onDataLoadedFromDisk(RssiHelper rssiHelper, WindowHelper windowHelper, SampleHelper sampleHelper);
         void onRecordAdded(String signal, Device device, Rssi r);
-        void onSampleAdded(String signal, double[] sample);
-        void onSentSuccess(String signal, String dataType, int count);
-        void onSentFailure(String signal, String dataType, int count, int respCode, String resp, String result);
-        void onSentFailure(String signal, String dataType, int count, String volleyError);
+        void onSentSuccess(String signal, int count);
+        void onSentFailure(String signal, int count, int respCode, String resp, String result);
     }
     private final List<SamplerListener> listeners = new ArrayList<>(1);
     public boolean registerListener(SamplerListener l) {

@@ -27,12 +27,4 @@
         android:title="Clear data to send..."
         android:orderInCategory="20"
         app:showAsAction="never" />
-    <item android:id="@+id/action_clearSamples"
-        android:title="Clear training data..."
-        android:orderInCategory="40"
-        app:showAsAction="never" />
-    <item android:id="@+id/action_trimSamples"
-        android:title="Trim samples by time..."
-        android:orderInCategory="50"
-        app:showAsAction="never" />
 </menu>

@@ -91,7 +91,7 @@ public class BtleBeacon {
             btAdapter.getBluetoothLeAdvertiser().startAdvertising(settings.build(), data.build(), adCallback);
         } else {
             Log.w(TAG, "Advertisement not supported.");
-            for (BtLeBeaconListener l : listeners) {
+            for (BtleBeaconListener l : listeners) {
                 l.onAdvertiseNotSupported();
             }
         }
@@ -112,7 +112,7 @@ public class BtleBeacon {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
             Log.i(TAG, "Started advertising at " + settingsInEffect.getTxPowerLevel() + "dBm.");
-            for (BtLeBeaconListener l : listeners) {
+            for (BtleBeaconListener l : listeners) {
                 l.onAdvertiseStartSuccess(settingsInEffect);
             }
         }
@@ -138,7 +138,7 @@ public class BtleBeacon {
                     break;
             }
             Log.i(TAG, "Advertise failed (" + errorCode + "): " + errorMsg);
-            for (BtLeBeaconListener l : listeners) {
+            for (BtleBeaconListener l : listeners) {
                 l.onAdvertiseStartFailure(errorCode, errorMsg);
             }
         }
@@ -148,7 +148,7 @@ public class BtleBeacon {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             logScanResult(result);
-            for (BtLeBeaconListener l : listeners) {
+            for (BtleBeaconListener l : listeners) {
                 l.onScanResult(callbackType, result);
             }
         }
@@ -159,7 +159,7 @@ public class BtleBeacon {
             for (ScanResult r : results) {
                 logScanResult(r);
             }
-            for (BtLeBeaconListener l : listeners) {
+            for (BtleBeaconListener l : listeners) {
                 l.onBatchScanResults(results);
             }
         }
@@ -182,7 +182,7 @@ public class BtleBeacon {
                     break;
             }
             Log.i(TAG, "Scan failed (" + errorCode + "): " + errorMsg);
-            for (BtLeBeaconListener l : listeners) {
+            for (BtleBeaconListener l : listeners) {
                 l.onScanFailed(errorCode, errorMsg);
             }
         }
@@ -194,7 +194,7 @@ public class BtleBeacon {
         }
     };
 
-    public interface BtLeBeaconListener {
+    public interface BtleBeaconListener {
         void onAdvertiseNotSupported();
         /** See {@link AdvertiseCallback#onStartSuccess(AdvertiseSettings)} */
         void onAdvertiseStartSuccess(AdvertiseSettings settingsInEffect);
@@ -207,11 +207,11 @@ public class BtleBeacon {
         /** See {@link ScanCallback#onScanFailed(int)} */
         void onScanFailed(int errorCode, String errorMsg);
     }
-    private final List<BtLeBeaconListener> listeners = new ArrayList<>(1);
-    public boolean registerListener(BtLeBeaconListener l) {
+    private final List<BtleBeaconListener> listeners = new ArrayList<>(1);
+    public boolean registerListener(BtleBeaconListener l) {
         return !listeners.contains(l) && listeners.add(l);
     }
-    public boolean unregisterListener(BtLeBeaconListener l) {
+    public boolean unregisterListener(BtleBeaconListener l) {
         return listeners.remove(l);
     }
 }

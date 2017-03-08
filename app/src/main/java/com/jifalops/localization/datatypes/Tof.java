@@ -3,7 +3,7 @@ package com.jifalops.localization.datatypes;
 /**
  * Time of Flight raw sample.
  */
-public class Tof {
+public class Tof implements NnSettings.Sample {
     public final String id1, id2;
     public final int tof;
     public final float distance;
@@ -25,5 +25,10 @@ public class Tof {
     @Override
     public String toString() {
         return id1 +","+ id2 +","+ tof +","+ distance;
+    }
+
+    @Override
+    public int[] getInputs() {
+        return new int[] { tof };
     }
 }

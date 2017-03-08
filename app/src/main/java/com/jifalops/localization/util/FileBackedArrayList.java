@@ -1,4 +1,4 @@
-package com.jifalops.localization.file;
+package com.jifalops.localization.util;
 
 
 import android.util.Log;

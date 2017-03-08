@@ -102,7 +102,7 @@ public class BtleBeaconDemoActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    private final BtleBeacon.BtLeBeaconListener btLeListener = new BtleBeacon.BtLeBeaconListener() {
+    private final BtleBeacon.BtleBeaconListener btLeListener = new BtleBeacon.BtleBeaconListener() {
         @Override
         public void onAdvertiseNotSupported() {
             textView.append("Advertisement not supported. Scanning for other devices...\n");

@@ -3,7 +3,7 @@ package com.jifalops.localization.datatypes;
 /**
  * Received Signal Strength raw sample.
  */
-public class Rssi {
+public class Rssi implements NnSettings.Sample {
     public final String id1, id2;
     public final int rssi, freq, width;
     public final float distance;
@@ -29,5 +29,10 @@ public class Rssi {
     @Override
     public String toString() {
         return id1 +","+ id2 +","+ rssi +","+ freq +","+ width +","+ distance;
+    }
+
+    @Override
+    public int[] getInputs() {
+        return new int[] { rssi, freq, width };
     }
 }
