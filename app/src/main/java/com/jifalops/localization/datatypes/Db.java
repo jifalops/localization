@@ -329,7 +329,7 @@ public class Db {
     }
 
 
-    public void submitSamples() {
+    public void submitSamples(final DatabaseReference.CompletionListener onComplete) {
         Map<String, Object> updates = new HashMap<>();
         String key;
         final App app = App.getInstance();
@@ -447,6 +447,7 @@ public class Db {
                     Log.e(TAG, "Failed to submit samples: " + databaseError.getMessage(), databaseError.toException());
                     Toast.makeText(app, "Error submitting samples.", Toast.LENGTH_LONG).show();
                 }
+                if (onComplete != null) onComplete.onComplete(databaseError, databaseReference);
             }
         });
     }

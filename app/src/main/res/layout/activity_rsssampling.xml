@@ -201,6 +201,45 @@
                 android:layout_columnWeight="1"
                 android:layout_gravity="fill"
                 android:text="0"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:layout_columnWeight="1"
+                android:layout_gravity="fill"
+                android:text="Range"/>
+            <TextView
+                android:id="@+id/btRangeCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:layout_columnWeight="1"
+                android:layout_gravity="fill"
+                android:text="0"/>
+            <TextView
+                android:id="@+id/btleRangeCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:layout_columnWeight="1"
+                android:layout_gravity="fill"
+                android:text="0"/>
+            <TextView
+                android:id="@+id/wifiRangeCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:layout_columnWeight="1"
+                android:layout_gravity="fill"
+                android:text="0"/>
+            <TextView
+                android:id="@+id/wifi5gRangeCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:layout_columnWeight="1"
+                android:layout_gravity="fill"
+                android:text="0"/>
         </GridLayout>
         <Button
             android:id="@+id/sendButton"

@@ -36,10 +36,10 @@ public class RssSamplingActivity extends AbsActivity {
     static final String SAMPLER = RssSamplingActivity.class.getName() + ".sampler";
 
     TextView eventLogView, deviceLogView,
-            btRssiCountView,
-            btleRssiCountView,
-            wifiRssiCountView,
-            wifi5gRssiCountView,
+            btRssiCountView,    btRangeCountView,
+            btleRssiCountView,  btleRangeCountView,
+            wifiRssiCountView,  wifiRangeCountView,
+            wifi5gRssiCountView, wifi5gRangeCountView,
             deviceIdView;
     EditText distanceView;
     Switch collectSwitch;
@@ -63,6 +63,10 @@ public class RssSamplingActivity extends AbsActivity {
         btleRssiCountView = (TextView) findViewById(R.id.btleRssiCount);
         wifiRssiCountView = (TextView) findViewById(R.id.wifiRssiCount);
         wifi5gRssiCountView = (TextView) findViewById(R.id.wifi5gRssiCount);
+        btRangeCountView = (TextView) findViewById(R.id.btRangeCount);
+        btleRangeCountView = (TextView) findViewById(R.id.btleRangeCount);
+        wifiRangeCountView = (TextView) findViewById(R.id.wifiRangeCount);
+        wifi5gRangeCountView = (TextView) findViewById(R.id.wifi5gRangeCount);
         collectSwitch = (Switch) findViewById(R.id.collectSwitch);
         btCheckBox = (CheckBox) findViewById(R.id.btCheckBox);
         btleCheckBox = (CheckBox) findViewById(R.id.btleCheckBox);
@@ -397,18 +401,24 @@ public class RssSamplingActivity extends AbsActivity {
 
         @Override
         public void onRecordAdded(String signal, RssSamplingHelper.Device device,
-                                  RefiningParams.Sample r, float immediateRange, float refinedRange) {
+                  RefiningParams.Sample r, float immediateRange, float refinedRange, float fspl) {
             updateCountView(signal);
         }
 
         @Override
-        public void onSentSuccess(String signal, int count) {
-            updateCountView(signal);
+        public void onSentSuccess() {
+            updateCountView(App.SIGNAL_BT);
+            updateCountView(App.SIGNAL_BTLE);
+            updateCountView(App.SIGNAL_WIFI);
+            updateCountView(App.SIGNAL_WIFI5G);
         }
 
         @Override
-        public void onSentFailure(String signal, int count, int respCode, String resp, String result) {
-            updateCountView(signal);
+        public void onSentFailure() {
+            updateCountView(App.SIGNAL_BT);
+            updateCountView(App.SIGNAL_BTLE);
+            updateCountView(App.SIGNAL_WIFI);
+            updateCountView(App.SIGNAL_WIFI5G);
         }
     };
 
@@ -420,6 +430,18 @@ public class RssSamplingActivity extends AbsActivity {
             case App.SIGNAL_BTLE:   tv = btleRssiCountView; break;
             case App.SIGNAL_WIFI:   tv = wifiRssiCountView; break;
             case App.SIGNAL_WIFI5G: tv = wifi5gRssiCountView; break;
+        }
+        if (tv != null) tv.setText(count+"");
+        updateRangeCountView(signal);
+    }
+    void updateRangeCountView(String signal) {
+        int count = rssSamplingHelper.getRangeCount(signal);
+        TextView tv = null;
+        switch (signal) {
+            case App.SIGNAL_BT:     tv = btRangeCountView; break;
+            case App.SIGNAL_BTLE:   tv = btleRangeCountView; break;
+            case App.SIGNAL_WIFI:   tv = wifiRangeCountView; break;
+            case App.SIGNAL_WIFI5G: tv = wifi5gRangeCountView; break;
         }
         if (tv != null) tv.setText(count+"");
     }
