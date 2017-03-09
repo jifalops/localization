@@ -45,12 +45,12 @@ public class App extends ServiceThreadApplication {
     public static final String FILE_TOF_BT_JAVA_SAMPLES = "tof_bt_java_samples.csv";
 
     // Ranging estimate caches
-    public static final String FILE_RSS_WIFI4G_RANGING  = "rss_wifi4g_ranging.csv";
-    public static final String FILE_RSS_WIFI5G_RANGING  = "rss_wifi5g_ranging.csv";
-    public static final String FILE_RSS_BT_RANGING      = "rss_bt_ranging.csv";
-    public static final String FILE_RSS_BTLE_RANGING    = "rss_btle_ranging.csv";
-    public static final String FILE_TOF_BT_HCI_RANGING  = "tof_bt_hci_ranging.csv";
-    public static final String FILE_TOF_BT_JAVA_RANGING = "tof_bt_java_ranging.csv";
+    public static final String FILE_RSS_WIFI4G_RANGING  = "rss_wifi4g_ranging_";
+    public static final String FILE_RSS_WIFI5G_RANGING  = "rss_wifi5g_ranging_";
+    public static final String FILE_RSS_BT_RANGING      = "rss_bt_ranging_";
+    public static final String FILE_RSS_BTLE_RANGING    = "rss_btle_ranging_";
+    public static final String FILE_TOF_BT_HCI_RANGING  = "tof_bt_hci_ranging_";
+    public static final String FILE_TOF_BT_JAVA_RANGING = "tof_bt_java_ranging_";
 
     private static App instance;
     public static App getInstance() {
@@ -74,6 +74,13 @@ public class App extends ServiceThreadApplication {
     public FileBackedArrayList rssBtleRanging;
     public FileBackedArrayList tofBtHciRanging;
     public FileBackedArrayList tofBtJavaRanging;
+
+    public String rssWifi4gRangingKey;
+    public String rssWifi5gRangingKey;
+    public String rssBtRangingKey;
+    public String rssBtleRangingKey;
+    public String tofBtHciRangingKey;
+    public String tofBtJavaRangingKey;
     
     public RefiningParams rssWifi4gRefiningParams;
     public RefiningParams rssWifi5gRefiningParams;
@@ -167,14 +174,13 @@ public class App extends ServiceThreadApplication {
         tofBtHciSamples = new FileBackedArrayList(new File(dir, FILE_TOF_BT_HCI_SAMPLES), null);
         tofBtJavaSamples = new FileBackedArrayList(new File(dir, FILE_TOF_BT_JAVA_SAMPLES), null);
 
-        // Ranging cache
-        rssWifi4gRanging = new FileBackedArrayList(new File(dir, FILE_RSS_WIFI4G_RANGING), null);
-        rssWifi5gRanging = new FileBackedArrayList(new File(dir, FILE_RSS_WIFI5G_RANGING), null);
-        rssBtRanging = new FileBackedArrayList(new File(dir, FILE_RSS_BT_RANGING), null);
-        rssBtleRanging = new FileBackedArrayList(new File(dir, FILE_RSS_BTLE_RANGING), null);
-        tofBtHciRanging = new FileBackedArrayList(new File(dir, FILE_TOF_BT_HCI_RANGING), null);
-        tofBtJavaRanging = new FileBackedArrayList(new File(dir, FILE_TOF_BT_JAVA_RANGING), null);
+        // Ranging cache temporary initialization
+        rssWifi4gRanging = new FileBackedArrayList(null, null);
+        rssWifi5gRanging = new FileBackedArrayList(null, null);
+        rssBtRanging = new FileBackedArrayList(null, null);
+        rssBtleRanging = new FileBackedArrayList(null, null);
+        tofBtHciRanging = new FileBackedArrayList(null, null);
+        tofBtJavaRanging = new FileBackedArrayList(null, null);
     }
-
-
+    
 }

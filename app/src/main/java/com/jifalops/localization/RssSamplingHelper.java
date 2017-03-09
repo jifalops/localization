@@ -8,8 +8,11 @@ import android.content.Context;
 
 import com.jifalops.localization.bluetooth.BtBeacon;
 import com.jifalops.localization.bluetooth.BtleBeacon;
+import com.jifalops.localization.datatypes.RangingParams;
+import com.jifalops.localization.datatypes.RefiningParams;
 import com.jifalops.localization.datatypes.Rss;
 import com.jifalops.localization.datatypes.RssBtle;
+import com.jifalops.localization.datatypes.RssRanging;
 import com.jifalops.localization.datatypes.RssWifi;
 import com.jifalops.localization.datatypes.Sample;
 import com.jifalops.localization.util.SimpleLog;
@@ -230,7 +233,17 @@ public class RssSamplingHelper {
                 App.getInstance().rssBtSamples.add(record.toString());
                 if (App.getInstance().rssBtRangingParams != null) {
                     immediateRange = App.getInstance().rssBtRangingParams.estimateRange(record.getInputs());
-                    refinedRange = App.getInstance().rssBtRangingParams.sampler.add(record);
+                    RefiningParams.Sample s = App.getInstance().rssBtRefiningParams.sampler.add(record);
+                    if (s != null) {
+                        refinedRange = App.getInstance().rssBtRangingParams.estimateRange(s.getInputs());
+                        App.getInstance().rssBtRanging.add(new RssRanging(App.getInstance().btMac,
+                                device.mac, (float) s.getInputs()[0], distance, refinedRange,
+                                RangingParams.freeSpacePathLoss(s.getInputs()[0], 2400)).toString());
+                        //
+                        // TODO copy the above to the other sections and clean that shit up
+                        //
+
+                    }
                 }
                 String s = "Device " + device.id + " (BT): " + rssi + ". Act: " + distance;
                 if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;

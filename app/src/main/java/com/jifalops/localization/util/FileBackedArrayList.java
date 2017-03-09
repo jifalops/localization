@@ -23,7 +23,7 @@ import java.util.Collections;
 public class FileBackedArrayList extends ArrayList<String> {
     private static final String TAG = FileBackedArrayList.class.getSimpleName();
 
-    protected final File file;
+    public final File file;
 
     public FileBackedArrayList(File file, Runnable onLoad) {
         this.file = file;
@@ -44,7 +44,7 @@ public class FileBackedArrayList extends ArrayList<String> {
 
     @Override
     public void clear() {
-        truncate();
+        delete();
         super.clear();
     }
 
@@ -105,26 +105,28 @@ public class FileBackedArrayList extends ArrayList<String> {
         });
     }
 
-    private void truncate() {
+    private void delete() {
         if (!file.exists()) return;
-        App.getInstance().getService().post(new Runnable() {
-            @Override
-            public void run() {
-                BufferedWriter writer = null;
-                try {
-                    writer = new BufferedWriter(new FileWriter(file, false));
-                } catch (FileNotFoundException ignored) {
-                } catch (IOException e) {
-                    Log.e(TAG, "Failed to truncate file: " + e.getMessage());
-                } finally {
+        if (!file.delete()) {
+            App.getInstance().getService().post(new Runnable() {
+                @Override
+                public void run() {
+                    BufferedWriter writer = null;
                     try {
-                        if (writer != null) writer.close();
+                        writer = new BufferedWriter(new FileWriter(file, false));
+                    } catch (FileNotFoundException ignored) {
                     } catch (IOException e) {
-                        Log.e(TAG, "Failed to close writer: " + e.getMessage());
+                        Log.e(TAG, "Failed to truncate file: " + e.getMessage());
+                    } finally {
+                        try {
+                            if (writer != null) writer.close();
+                        } catch (IOException e) {
+                            Log.e(TAG, "Failed to close writer: " + e.getMessage());
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
 
