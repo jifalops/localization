@@ -9,19 +9,11 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.jifalops.localization.bluetooth.BtHelper;
+import com.jifalops.localization.datatypes.Db;
 import com.jifalops.localization.datatypes.RangingParams;
 import com.jifalops.localization.datatypes.RefiningParams;
 import com.jifalops.localization.util.FileBackedArrayList;
@@ -98,65 +90,26 @@ public class App extends ServiceThreadApplication {
     public RangingParams tofBtJavaRangingParams;
 
     public String wifiMac, btMac;
-    public FirebaseUser firebaseUser;
-    public DatabaseReference database;
-    private FirebaseAuth auth;
-    private FirebaseAuth.AuthStateListener authListener;
-
+    private Db db;
 
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        db = Db.getInstance();
 
         initWifiMac();
         initBtMac();
-
-        auth = FirebaseAuth.getInstance();
-        authListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                firebaseUser = firebaseAuth.getCurrentUser();
-                if (firebaseUser != null) {
-                    // User is signed in
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + firebaseUser.getUid());
-                    fetchParameters();
-                } else {
-                    // User is signed out
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
-                }
-            }
-        };
-
-        database = FirebaseDatabase.getInstance().getReference();
 
         bindLocalService(this, new LocalServiceConnection() {
             @Override
             public void onServiceConnected(LocalService service) {
                 loadDataFiles();
-                auth.addAuthStateListener(authListener);
-                auth.signInAnonymously()
-                        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                Log.d(TAG, "signInAnonymously:onComplete:" + task.isSuccessful());
-
-                                // If sign in fails, display a message to the user. If sign in succeeds
-                                // the auth state listener will be notified and logic to handle the
-                                // signed in user can be handled in the listener.
-                                if (!task.isSuccessful()) {
-                                    Log.w(TAG, "signInAnonymously", task.getException());
-                                    Toast.makeText(App.this, "Authentication failed.",
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        });
+                db.login();
             }
             @Override public void onServiceDisconnected(ComponentName className) {
-                if (authListener != null) {
-                    auth.removeAuthStateListener(authListener);
-                }
+                db.removeAuthListener();
             }
         });
     }
@@ -223,8 +176,5 @@ public class App extends ServiceThreadApplication {
         tofBtJavaRanging = new FileBackedArrayList(new File(dir, FILE_TOF_BT_JAVA_RANGING), null);
     }
 
-    private void fetchParameters() {
-        if (database == null || firebaseUser == null) return;
 
-    }
 }
