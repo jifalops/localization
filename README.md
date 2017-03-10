@@ -114,6 +114,12 @@ The describe how to calculate the range of a given sample.
   The inputs and outputs of the NN will be scaled. RSS ranges 
   from -120 dBm to 0 dBm, and would be plugged into the NN as -1 and 1 respectively.
 
+  How to flatten the weights into an array:
+  
+  hiddenBiasesStart = inputs * hidden;
+  hiddenToOutputStart = hiddenBiasesStart + hidden;
+  outputBiasesStart = hiddenToOutputStart + hidden * numOutputs;
+
 Example use of RefiningParams and RangingParams
   
 5 samples are collected from a single device, 1 is dropped from the high and low end, then the median
@@ -160,7 +166,7 @@ Raw samples (cache before sending)
 * tof_bt_java_samples.csv
 
 Ranging estimates (cache before sending)
-* rss_wifi4g_ranging.csv
+* rss_wifi4g_ranging_{key}.csv
 * rss_wifi5g_ranging.csv
 * rss_bt_ranging.csv
 * rss_btle_ranging.csv
