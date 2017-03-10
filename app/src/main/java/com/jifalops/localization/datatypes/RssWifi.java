@@ -1,12 +1,18 @@
 package com.jifalops.localization.datatypes;
 
+import com.google.firebase.database.Exclude;
+import com.google.firebase.database.IgnoreExtraProperties;
+
 /**
  * Received Signal Strength raw sample.
  */
+@IgnoreExtraProperties
 public class RssWifi implements RefiningParams.Sample {
-    public final String id1, id2;
-    public final int rss, freq, width;
-    public final float dist;
+    public String id1, id2;
+    public int rss, freq, width;
+    public float dist;
+
+    public RssWifi() {}
 
     public RssWifi(String id1, String id2, int rss, int freq, int width, float dist) {
         this.id1 = id1;
@@ -31,6 +37,7 @@ public class RssWifi implements RefiningParams.Sample {
         return id1 +","+ id2 +","+ rss +","+ freq +","+ width +","+ dist;
     }
 
+    @Exclude
     @Override
     public double[] getInputs() {
         return new double[] {rss, freq, width };

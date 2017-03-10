@@ -1,12 +1,18 @@
 package com.jifalops.localization.datatypes;
 
+import com.google.firebase.database.Exclude;
+import com.google.firebase.database.IgnoreExtraProperties;
+
 /**
  * Received Signal Strength raw sample.
  */
+@IgnoreExtraProperties
 public class RssBtle implements RefiningParams.Sample {
-    public final String id1, id2;
-    public final int rss, txPower;
-    public final float dist;
+    public  String id1, id2;
+    public int rss, txPower;
+    public float dist;
+
+    public RssBtle() {}
 
     public RssBtle(String id1, String id2, int rss, int txPower, float dist) {
         this.id1 = id1;
@@ -29,6 +35,7 @@ public class RssBtle implements RefiningParams.Sample {
         return id1 +","+ id2 +","+ rss +","+ txPower +","+ dist;
     }
 
+    @Exclude
     @Override
     public double[] getInputs() {
         return new double[] {rss, txPower };

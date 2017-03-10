@@ -1,9 +1,13 @@
 package com.jifalops.localization.datatypes;
 
+import com.google.firebase.database.IgnoreExtraProperties;
 
+@IgnoreExtraProperties
 public class RssRanging {
-    public final String id1, id2;
-    public final float rss, dist, range, fspl;
+    public String id1, id2;
+    public float rss, dist, range, fspl;
+
+    public RssRanging() {}
 
     public RssRanging(String id1, String id2, float rss,
                       float dist, float range, float fspl) {

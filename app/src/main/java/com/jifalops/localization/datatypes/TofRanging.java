@@ -1,9 +1,13 @@
 package com.jifalops.localization.datatypes;
 
+import com.google.firebase.database.IgnoreExtraProperties;
 
+@IgnoreExtraProperties
 public class TofRanging {
-    public final String id1, id2;
-    public final float tof, dist, range, fspl;
+    public String id1, id2;
+    public float tof, dist, range, fspl;
+
+    public TofRanging() {}
 
     public TofRanging(String id1, String id2, float tof,
                       float dist, float range, float fspl) {
