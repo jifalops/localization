@@ -49,7 +49,7 @@ public class FileBackedArrayList extends ArrayList<String> {
     }
 
     private void loadFromDisk(final Runnable onLoad) {
-        if (!file.exists()) return;
+        if (file == null || !file.exists()) return;
         App.getInstance().getService().post(new Runnable() {
             @Override
             public void run() {
@@ -78,6 +78,7 @@ public class FileBackedArrayList extends ArrayList<String> {
     }
 
     private void writeLines(final Collection<? extends String> lines) {
+        if (file == null) return;
         App.getInstance().getService().post(new Runnable() {
             @Override
             public void run() {
@@ -106,7 +107,7 @@ public class FileBackedArrayList extends ArrayList<String> {
     }
 
     private void delete() {
-        if (!file.exists()) return;
+        if (file == null || !file.exists()) return;
         if (!file.delete()) {
             App.getInstance().getService().post(new Runnable() {
                 @Override

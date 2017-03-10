@@ -18,7 +18,7 @@ public class RssRanging {
     public RssRanging(String[] csv) {
         id1 = csv[0];
         id2 = csv[1];
-        rss = Integer.valueOf(csv[2]);
+        rss = Float.valueOf(csv[2]);
         dist = Float.valueOf(csv[3]);
         range = Float.valueOf(csv[4]);
         fspl = Float.valueOf(csv[5]);

@@ -20,9 +20,9 @@ public class RssWifiRanging {
     public RssWifiRanging(String[] csv) {
         id1 = csv[0];
         id2 = csv[1];
-        rss = Integer.valueOf(csv[2]);
-        freq = Integer.valueOf(csv[3]);
-        width = Integer.valueOf(csv[4]);
+        rss = Float.valueOf(csv[2]);
+        freq = Float.valueOf(csv[3]);
+        width = Float.valueOf(csv[4]);
         dist = Float.valueOf(csv[5]);
         range = Float.valueOf(csv[6]);
         fspl = Float.valueOf(csv[7]);

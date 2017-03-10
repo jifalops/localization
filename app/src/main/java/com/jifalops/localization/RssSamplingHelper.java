@@ -15,8 +15,10 @@ import com.jifalops.localization.datatypes.RangingParams;
 import com.jifalops.localization.datatypes.RefiningParams;
 import com.jifalops.localization.datatypes.Rss;
 import com.jifalops.localization.datatypes.RssBtle;
+import com.jifalops.localization.datatypes.RssBtleRanging;
 import com.jifalops.localization.datatypes.RssRanging;
 import com.jifalops.localization.datatypes.RssWifi;
+import com.jifalops.localization.datatypes.RssWifiRanging;
 import com.jifalops.localization.util.SimpleLog;
 import com.jifalops.localization.wifi.WifiScanner;
 
@@ -105,6 +107,10 @@ public class RssSamplingHelper {
         App.getInstance().rssWifi5gSamples.clear();
         App.getInstance().rssBtSamples.clear();
         App.getInstance().rssBtleSamples.clear();
+        App.getInstance().rssWifi4gRanging.clear();
+        App.getInstance().rssWifi5gRanging.clear();
+        App.getInstance().rssBtRanging.clear();
+        App.getInstance().rssBtleRanging.clear();
     }
     
 
@@ -247,7 +253,7 @@ public class RssSamplingHelper {
                 }
                 String s = "Device " + device.id + " (BT): " + rssi + ". Act: " + distance;
                 if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;
-                if (refinedRange > 0) s += ". Ref: " + Math.round(immediateRange * 10) / 10;
+                if (refinedRange > 0) s += ". Ref: " + Math.round(refinedRange * 10) / 10;
                 if (fspl > 0) s += ". Fspl: " + Math.round(fspl * 10) / 10;
                 addEvent(LOG_INFORMATIVE,  s);
                 for (SamplerListener l : listeners) l.onRecordAdded(App.SIGNAL_BT, device, record,
@@ -269,15 +275,17 @@ public class RssSamplingHelper {
                     immediateRange = app.rssBtleRangingParams.estimateRange(record.getInputs());
                     RefiningParams.Sample s = app.rssBtleRefiningParams.sampler.add(record);
                     if (s != null) {
-                        refinedRange = app.rssBtleRangingParams.estimateRange(s.getInputs());
-                        fspl = RangingParams.freeSpacePathLoss(s.getInputs()[0], 2400);
-                        app.rssBtleRanging.add(new RssRanging(app.btMac, device.mac,
-                                (float) s.getInputs()[0], distance, refinedRange, fspl).toString());
+                        double[] inputs = s.getInputs();
+                        refinedRange = app.rssBtleRangingParams.estimateRange(inputs);
+                        fspl = RangingParams.freeSpacePathLoss(inputs[0], 2400);
+                        app.rssBtleRanging.add(new RssBtleRanging(app.btMac, device.mac,
+                                (float) inputs[0], (float) inputs[1], distance, refinedRange, fspl).toString());
                     }
                 }
                 String s = "Device " + device.id + " (LE): " + rssi + ". Act: " + distance;
                 if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;
-                if (refinedRange > 0) s += ". Ref: " + Math.round(immediateRange * 10) / 10;
+                if (refinedRange > 0) s += ". Ref: " + Math.round(refinedRange * 10) / 10;
+                if (fspl > 0) s += ". Fspl: " + Math.round(fspl * 10) / 10;
                 addEvent(LOG_INFORMATIVE,  s);
                 for (SamplerListener l : listeners) l.onRecordAdded(App.SIGNAL_BTLE, device, record,
                         immediateRange, refinedRange, fspl);
@@ -298,15 +306,18 @@ public class RssSamplingHelper {
                     immediateRange = app.rssWifi4gRangingParams.estimateRange(record.getInputs());
                     RefiningParams.Sample s = app.rssWifi4gRefiningParams.sampler.add(record);
                     if (s != null) {
-                        refinedRange = app.rssWifi4gRangingParams.estimateRange(s.getInputs());
-                        fspl = RangingParams.freeSpacePathLoss(s.getInputs()[0], 2400);
-                        app.rssWifi4gRanging.add(new RssRanging(app.wifiMac, device.mac,
-                                (float) s.getInputs()[0], distance, refinedRange, fspl).toString());
+                        double[] inputs = s.getInputs();
+                        refinedRange = app.rssWifi4gRangingParams.estimateRange(inputs);
+                        fspl = RangingParams.freeSpacePathLoss(inputs[0], 2400);
+                        app.rssWifi4gRanging.add(new RssWifiRanging(app.wifiMac, device.mac,
+                            (float) inputs[0], (float) inputs[1], (float) inputs[2],
+                                distance, refinedRange, fspl).toString());
                     }
                 }
                 String s = "Device " + device.id + " (4G): " + rssi + ". Act: " + distance;
                 if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;
-                if (refinedRange > 0) s += ". Ref: " + Math.round(immediateRange * 10) / 10;
+                if (refinedRange > 0) s += ". Ref: " + Math.round(refinedRange * 10) / 10;
+                if (fspl > 0) s += ". Fspl: " + Math.round(fspl * 10) / 10;
                 addEvent(LOG_INFORMATIVE,  s);
                 for (SamplerListener l : listeners) l.onRecordAdded(App.SIGNAL_WIFI, device, record,
                         immediateRange, refinedRange, fspl);
@@ -327,15 +338,18 @@ public class RssSamplingHelper {
                     immediateRange = app.rssWifi5gRangingParams.estimateRange(record.getInputs());
                     RefiningParams.Sample s = app.rssWifi5gRefiningParams.sampler.add(record);
                     if (s != null) {
-                        refinedRange = app.rssWifi5gRangingParams.estimateRange(s.getInputs());
-                        fspl = RangingParams.freeSpacePathLoss(s.getInputs()[0], 2400);
-                        app.rssWifi5gRanging.add(new RssRanging(app.wifiMac, device.mac,
-                                (float) s.getInputs()[0], distance, refinedRange, fspl).toString());
+                        double[] inputs = s.getInputs();
+                        refinedRange = app.rssWifi5gRangingParams.estimateRange(inputs);
+                        fspl = RangingParams.freeSpacePathLoss(inputs[0], 2400);
+                        app.rssWifi5gRanging.add(new RssWifiRanging(app.wifiMac, device.mac,
+                                (float) inputs[0], (float) inputs[1], (float) inputs[2],
+                                distance, refinedRange, fspl).toString());
                     }
                 }
                 String s = "Device " + device.id + " (5G): " + rssi + ". Act: " + distance;
                 if (immediateRange > 0) s += ". Imm: " + Math.round(immediateRange * 10) / 10;
-                if (refinedRange > 0) s += ". Ref: " + Math.round(immediateRange * 10) / 10;
+                if (refinedRange > 0) s += ". Ref: " + Math.round(refinedRange * 10) / 10;
+                if (fspl > 0) s += ". Fspl: " + Math.round(fspl * 10) / 10;
                 addEvent(LOG_INFORMATIVE,  s);
                 for (SamplerListener l : listeners) l.onRecordAdded(App.SIGNAL_WIFI5G, device, record,
                         immediateRange, refinedRange, fspl);

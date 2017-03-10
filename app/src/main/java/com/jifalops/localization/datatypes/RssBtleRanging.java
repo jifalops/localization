@@ -19,8 +19,8 @@ public class RssBtleRanging {
     public RssBtleRanging(String[] csv) {
         id1 = csv[0];
         id2 = csv[1];
-        rss = Integer.valueOf(csv[2]);
-        txPower = Integer.valueOf(csv[3]);
+        rss = Float.valueOf(csv[2]);
+        txPower = Float.valueOf(csv[3]);
         dist = Float.valueOf(csv[4]);
         range = Float.valueOf(csv[5]);
         fspl = Float.valueOf(csv[6]);

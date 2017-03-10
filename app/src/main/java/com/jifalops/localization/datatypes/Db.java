@@ -424,6 +424,8 @@ public class Db {
 
         addOldRangingSampleUpdates(updates);
 
+        Log.d(TAG, "Submitting updates: " + updates);
+
         db.updateChildren(updates, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {

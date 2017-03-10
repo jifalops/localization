@@ -88,6 +88,7 @@ public class RssSamplingActivity extends AbsActivity {
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT);
                 input.setLayoutParams(lp);
+//                input.setInputType(InputType.TYPE_NUMBER_VARIATION_NORMAL);
 //                input.setInputType(InputType.TYPE_CLASS_NUMBER);
                 b.setView(input);
                 b.setTitle("Device IDs (comma separated)");
