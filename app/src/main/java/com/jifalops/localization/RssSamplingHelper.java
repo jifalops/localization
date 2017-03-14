@@ -452,14 +452,25 @@ public class RssSamplingHelper {
             for (android.net.wifi.ScanResult r : scanResults) {
                 if (r.frequency < 4000 && shouldUseWifi) {
                     addWifi4gRecord(getDevice(r.BSSID, r.SSID + " (WiFi " + r.frequency + "MHz)"),
-                            r.level, r.frequency, r.channelWidth);
+                            r.level, r.frequency, chanWidth(r.channelWidth));
                 } else if (r.frequency > 4000 && shouldUseWifi5g) {
                     addWifi5gRecord(getDevice(r.BSSID, r.SSID + " (WiFi " + r.frequency + "MHz)"),
-                            r.level, r.frequency, r.channelWidth);
+                            r.level, r.frequency, chanWidth(r.channelWidth));
                 }
             }
         }
     };
+
+    private int chanWidth(int width)  {
+        switch (width) {
+            case android.net.wifi.ScanResult.CHANNEL_WIDTH_20MHZ: return 20;
+            case android.net.wifi.ScanResult.CHANNEL_WIDTH_40MHZ: return 40;
+            case android.net.wifi.ScanResult.CHANNEL_WIDTH_80MHZ: return 80;
+            case android.net.wifi.ScanResult.CHANNEL_WIDTH_160MHZ: return 160;
+            case android.net.wifi.ScanResult.CHANNEL_WIDTH_80MHZ_PLUS_MHZ: return 160; //TODO nn input
+            default: return 0;
+        }
+    }
 
     public interface SamplerListener {
         void onMessageLogged(int level, String msg);

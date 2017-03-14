@@ -389,37 +389,37 @@ public class Db {
         for (String range : app.rssWifi4gRanging) {
             wifiRanging = new RssWifiRanging(range.split(","));
             key = db.child("rssWifi4gRanging").child(app.rssWifi4gRangingKey).push().getKey();
-            updates.put("/rssWifi4gRanging/" + key, wifiRanging);
+            updates.put("/rssWifi4gRanging/" + app.rssWifi4gRangingKey + "/" + key, wifiRanging);
         }
 
         for (String range : app.rssWifi5gRanging) {
             wifiRanging = new RssWifiRanging(range.split(","));
             key = db.child("rssWifi5gRanging").child(app.rssWifi5gRangingKey).push().getKey();
-            updates.put("/rssWifi5gRanging/" + key, wifiRanging);
+            updates.put("/rssWifi5gRanging/" + app.rssWifi5gRangingKey + "/" + key, wifiRanging);
         }
 
         for (String range : app.rssBtRanging) {
             btRssRanging = new RssRanging(range.split(","));
             key = db.child("rssBtRanging").child(app.rssBtRangingKey).push().getKey();
-            updates.put("/rssBtRanging/" + key, btRssRanging);
+            updates.put("/rssBtRanging/" + app.rssBtRangingKey + "/" + key, btRssRanging);
         }
 
         for (String range : app.rssBtleRanging) {
             btleRanging = new RssBtleRanging(range.split(","));
             key = db.child("rssBtleRanging").child(app.rssBtleRangingKey).push().getKey();
-            updates.put("/rssBtleRanging/" + key, btleRanging);
+            updates.put("/rssBtleRanging/" + app.rssBtleRangingKey + "/" + key, btleRanging);
         }
 
         for (String range : app.tofBtHciRanging) {
             btHciRanging = new TofRanging(range.split(","));
             key = db.child("tofBtHciRanging").child(app.tofBtHciRangingKey).push().getKey();
-            updates.put("/tofBtHciRanging/" + key, btHciRanging);
+            updates.put("/tofBtHciRanging/" + app.tofBtHciRangingKey + "/" + key, btHciRanging);
         }
 
         for (String range : app.tofBtJavaRanging) {
             btJavaRanging = new TofRanging(range.split(","));
             key = db.child("tofBtJavaRanging").child(app.tofBtJavaRangingKey).push().getKey();
-            updates.put("/tofBtJavaRanging/" + key, btJavaRanging);
+            updates.put("/tofBtJavaRanging/" + app.tofBtJavaRangingKey + "/" + key, btJavaRanging);
         }
 
         addOldRangingSampleUpdates(updates);
